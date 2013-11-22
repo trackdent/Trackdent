@@ -1,0 +1,31 @@
+<div>
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">{{=T('Dental Work Selection')}}</h3>
+</div>
+{{=insert_form.custom.begin}} 
+<div class="modal-body">
+    <div class="row-fluid">
+        <div class="span6">
+        {{=insert_form.custom.widget.d_works_field}}
+        </div>
+        <div class="span6">
+            <table class="table table-condensed table-striped table-bordered">
+                <tr><td>{{=insert_form.custom.label.dental_work_date}}:</td>
+                    <td>{{=insert_form.custom.widget.dental_work_date}}</td></tr>
+                <tr><td>{{=insert_form.custom.label.charge}}:</td>
+                    <td>{{=insert_form.custom.widget.charge}}</td></tr>
+                <tr><td>{{=insert_form.custom.label.material}}:</td>
+                    <td>{{=insert_form.custom.widget.material}}</td></tr>
+                <tr><td>{{=insert_form.custom.label.dental_lab}}:</td>
+                    <td>{{=insert_form.custom.widget.dental_lab}}</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">{{=T('Cancel')}}</button>
+    <button class="btn btn-primary" type="submit">OK</button>
+</div>
+{{=insert_form.custom.end}} 
+</div>

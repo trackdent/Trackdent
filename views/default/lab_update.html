@@ -1,0 +1,8 @@
+{{extend 'layout.html'}}
+{{include 'default/patient_name_bar.html'}}
+{{include 'default/main_patient_menu.html'}}
+
+<div class="span10 lightcolor2 well sunken">
+    {{=LOAD('default', 'lab_update_details.load', args = request.args, ajax=False, ajax_trap=True, target="lab_details_component")}}
+</div>
+

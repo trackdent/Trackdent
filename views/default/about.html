@@ -1,0 +1,15 @@
+{{extend 'layout.html'}}
+{{include 'default/main_patient_menu.html'}}
+<div class="span8 well sunken" style="background-image: url( '{{=URL("static","images/ricepaper.png")}}');">
+    <div class="row-fluid">    
+        <div class='span4'>
+            <a class="brand" href="{{=URL('index')}}"><span style='color:red;font-style:italic;font-size:xx-large;'>Track</span><span style='color:blue;font-size:xx-large;'>DENT</span></a>
+        </div>
+        <div class='span8'>
+            <span style='color:grey;font-size:x-large;'>TrackDent</span>
+            <br>1.0
+            <br>
+            {{=license}}
+        </div>
+    </div>
+</div>

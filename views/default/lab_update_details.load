@@ -1,0 +1,123 @@
+<script>
+    jQuery(document).ready(function(){
+        jQuery('#info0 a').attr('href', '{{=URL("lab_update", args=[request.args(0), request.args(1), "new"], extension=False)}}');
+	 jQuery('#info0 a').text(" New Lab");
+	{{if not request.args(1):}}
+	    jQuery('table').find("select, input, textarea").each(function() {
+		$(this).attr("disabled", true);
+		jQuery('.delete').attr('disabled', true);
+	    });
+	{{elif (request.args(2) == 'new') or (request.args(1) == 'new'):}}
+	    jQuery('.delete, #btn-new').attr('disabled', true);
+	    jQuery('.save, .cancel').removeAttr('disabled');
+	    jQuery('i').fadeTo(0, 0.5);
+	{{pass}}
+        jQuery('input, textarea').not(".search-query").bind('input', function(){
+            jQuery('.delete').attr("disabled", "disabled");
+            jQuery('.save, .cancel').removeAttr('disabled');
+        });
+        jQuery('input[type="checkbox"], select').change(function(){
+            jQuery('.delete').attr("disabled", "disabled");
+            jQuery('.save, .cancel').removeAttr('disabled');
+        });
+        jQuery('input.date').mousedown(function(){
+            jQuery('.delete').attr("disabled", "disabled");
+            jQuery('.save, .cancel').removeAttr('disabled');
+        });
+        jQuery('button[type="reset"]').click(function(){
+            {{if request.args(2) == 'new':}}
+	        lab_url = "{{=URL('lab_update', extension=False)}}" + "/" + {{=request.args(0)}} + "/" +{{=request.args(1)}} ;
+	        window.location.href = lab_url;
+	    {{elif request.args(1) == 'new':}}
+	        lab_url = "{{=URL('labs', extension=False)}}" + "/" + {{=request.args(0)}};
+	        window.location.href = lab_url;
+	    {{else:}}
+	        jQuery('.save, .cancel').attr("disabled", "disabled");
+                jQuery('.delete').removeAttr("disabled");
+	    {{pass}}
+        });
+	jQuery('button.delete').click(function() {
+            jQuery('input[name="del_b"]').attr("value", 'True');
+        });
+    });
+</script>
+
+<!-- jQuery('#mytabs li:eq(2) a').tab('show')
+You can activate individual tabs in several ways:
+    $('#myTab a[href="#profile"]').tab('show'); // Select tab by name
+    $('#myTab a:first').tab('show'); // Select first tab
+    $('#myTab a:last').tab('show'); // Select last tab
+    $('#myTab li:eq(2) a').tab('show'); // Select third tab (0-indexed)
+-->
+
+{{=form.custom.begin}}
+    <div class='row-fluid'>
+        <div class='btn-toolbar' style="margin-top:7px;">
+            <div class='btn-group span8'>
+                <button class='btn btn-silver cancel' disabled='disabled' type='reset'><i class="icon-remove"></i> Cancel</button>
+                <button class='btn btn-grey save' disabled='disabled' type='submit'><i class="icon-ok icon-white"></i> Save</button>
+            </div>
+            <div class='btn-group pull-right'>
+                <button class='btn btn-silver delete' type='submit' onclick='return confirm("{{=T('Are you sure?')}}")' name='delete'  value='delete'><i class="icon-trash"></i> Delete Lab</button>  
+            </div>
+        </div>
+    </div>
+    <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:13px;'>
+    <div class='row-fluid'>
+        <div class="lightcolor1 well" style="margin-top:-30px;">
+            <div class="tab-content"><!-- all tabs content start-->
+                <div class="tab-pane active" id="tab1"><!-- tab1 start-->
+                    <!--
+                    How to access inserted items in a form with form.custom....
+                    form = SQLFORM(db.yourtable)
+                    form.custom.widget.my_extra_input = INPUT(_name='agree', value=True, _type='checkbox')
+                    form.custom.label.my_extra_label = LABEL('I agree to the terms and conditions')
+                    my_extra_element = TR(form.custom.label.my_extra_label, form.custom.widget.my_extra_input)
+                    form[0].insert(-1, my_extra_element)
+                    -->
+                    <div class="row-fluid"><!-- row start-->
+                        <table class="table table-condensed">
+                            <tr><td><label>{{=form.custom.label.lastname}}:</label></td>
+			    <td>{{=form.custom.widget.lastname}}</td>
+			    <td><label>{{=form.custom.label.firstname}}:</label></td>
+			    <td>{{=form.custom.widget.firstname}}</td></tr>
+		        </table>
+                    </div><!-- row end-->
+                    <div class="row-fluid"><!-- row start-->
+                        <div class="span5">
+                            <div class="row-fluid">
+				<table class="table table-condensed table-bordered">
+				    <tr><td><label>{{=form.custom.label.address}}:</label></td>
+					<td>{{=form.custom.widget.address}}</td></tr>
+				    <tr><td><label>{{=form.custom.label.city}}:</label></td>
+					<td>{{=form.custom.widget.city}}</td></tr>
+				    <tr><td><label>{{=form.custom.label.zipcode}}:</label></td>
+					<td>{{=form.custom.widget.zipcode}}</td></tr>
+				</table>
+			    </div>
+                        </div>
+                        <div class="span5">
+                            <table class="table table-condensed table-bordered">
+                                <tr><td><table class="table table-condensed table-bordered">
+                                            <tr><td><label>{{=form.custom.label.tel1}}:</label></td>
+                                                <td>{{=form.custom.widget.tel1}}</td></tr>
+                                            <tr><td><label>{{=form.custom.label.tel2}}:</label></td>
+                                                <td>{{=form.custom.widget.tel2}}</td></tr>
+                                            <tr><td><label>{{=form.custom.label.telmobile}}:</label></td>
+                                                <td>{{=form.custom.widget.telmobile}}</td></tr>
+                                        </table>
+                                    </td>
+                                    <td><table class="table table-condensed table-bordered">
+                                            <tr><td><label>{{=form.custom.label.email}}:</label></td>
+                                                <td>{{=form.custom.widget.email}}</td></tr>
+                                            <tr><td><label>{{=form.custom.label.notes}}:</label></td>
+                                                <td>{{=form.custom.widget.notes}}</td></tr>
+                                        </table></td></tr>
+                            </table>
+                        </div>
+                    </div><!-- row end-->
+                </div><!-- tab1 end -->
+            </div><!-- all tabs content end-->     
+        </div>
+    </div>
+{{=form.custom.end}}

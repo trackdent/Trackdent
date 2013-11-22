@@ -1,0 +1,81 @@
+{{response.files.append(URL(r=request,c='static',f='css/demo_page.css'))}}
+{{response.files.append(URL(r=request,c='static',f='css/demo_table_jui.css'))}}
+{{response.files.append(URL(r=request,c='static',f='js/jquery.dataTables.js'))}}
+
+{{extend 'layout.html'}}
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('#info10').addClass('active');
+    jQuery('#payments tr td, th').disableSelection();
+    var cur_rec_name;
+    var cur_rec_id;
+    var checked_box;
+    var pay_url;
+    jQuery('.master tr').click(function(e){
+        if (!jQuery('#new_pay').attr('disabled')) {
+            if ($(this).hasClass('row_selected')) {
+                $(this).css("background","");
+                $(this).removeClass('row_selected');
+                pay_url = "{{=URL("payments_details.load")}}" + "/" + {{=request.args(0)}};
+                }
+            else {
+                jQuery('tr.row_selected').css("background","");
+                jQuery('tr.row_selected').removeClass('row_selected');
+                $(this).addClass('row_selected');  
+                checked_box = jQuery('input', this);
+                cur_rec_name = jQuery(checked_box).attr('name');
+                cur_rec_id = cur_rec_name.slice(7);
+                pay_url = "{{=URL("payments_details.load")}}" + "/" + {{=request.args(0)}} + "/" + cur_rec_id; 
+                };
+            web2py_component(pay_url, 'pay_details_component');
+        }
+    });
+    jQuery.extend( $.fn.dataTable.defaults, {
+        "bSortClasses": false,
+        "bFilter": false,
+        "bInfo": false,
+        "sScrollY": "420px",
+        "bPaginate": false,
+        "bScrollCollapse": false
+    });
+    $('#payments').dataTable();
+    {{if request.args(1) and request.args(1)<>'new':}}
+        var input_name;
+        input_name = 'pay_id_' + '{{=request.args(1)}}';
+        jQuery('input[name='+input_name+']').closest('tr').addClass('row_selected');
+    {{pass}}
+    jQuery('#new_pay').click(function() {
+        jQuery('.row_selected').css("background","");
+        jQuery('.row_selected').removeClass('row_selected');
+        pay_url = "{{=URL("payments_details.load")}}" + "/" + {{=request.args(0)}} + "/new";
+        web2py_component(pay_url, 'pay_details_component');
+    });      
+});
+</script>
+
+{{include 'default/patient_name_bar.html'}}
+{{include 'default/main_patient_menu.html'}}
+
+<div class="span10 lightcolor2 well sunken" > 
+    <div class="row-fluid">    
+        <div class='span5'>
+            <div class='row-fluid'>
+                <div class='btn-toolbar' style="margin-top:13px;">
+                    <div class='btn-group'>
+                        <button class='btn btn-grey new' id='new_pay'><i class="icon-plus icon-white"></i> {{=T('New Payment')}}</button>
+                    </div>
+                </div>
+            </div>
+            <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:0px;'>
+            <div class='row-fluid'>
+            {{=table1}}
+            </div>
+        </div>     
+        <div class="lightcolor1 well span7">
+            {{=LOAD('default', 'payments_details.load', args = [request.args(0), request.args(1)], ajax=False, ajax_trap=True, target="pay_details_component")}}   
+        </div>
+    </div>
+</div>
+   
+   

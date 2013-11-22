@@ -1,0 +1,24 @@
+Author: Dimitris Trifonopoulos
+
+This software is a volunteer effort hoping to help dentists to run their offices in a more organized way.
+
+The author will be happy to hear this target has been accomplished, even partially.
+For this, as well as any suggestion you may have, you can contact the author in this email address:
+
+dimtrif@gmail.com
+
+Copyright (C) 2013  Dimitris Trifonopoulos
+
+This program is free software; you can redistribute it and or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.

@@ -1,0 +1,103 @@
+{{extend 'layout.html'}}
+
+<script>
+    jQuery(document).ready(function(){
+        jQuery('#info7').addClass('active');
+        jQuery('.web2py_grid td').click(function(){
+            var currentId_update_link = "{{=URL('endo')}}" +'/' + {{=request.args(0)}} + '/' + $(this).parent().attr('id');
+            window.location.href = currentId_update_link;
+        });      
+        jQuery('input, textarea').not(".search-query").bind('input', function(){
+            jQuery('.new, .delete').attr("disabled", "disabled");
+            jQuery('.save, .cancel').removeAttr('disabled');});
+        jQuery('input[type="checkbox"], select').change(function(){
+            jQuery('.new, .delete').attr("disabled", "disabled");
+            jQuery('.save, .cancel').removeAttr('disabled');});    
+        jQuery('input.date').mousedown(function(){
+            jQuery('.new, .delete').attr("disabled", "disabled");
+            jQuery('.save, .cancel').removeAttr('disabled');});
+        jQuery('button[type="reset"]').click(function(){
+            jQuery('.save, .cancel').attr("disabled", "disabled");
+            jQuery('.new, .delete').removeAttr("disabled");});  
+         
+    });
+</script> 
+<div class="row-fluid"><!-- row start-->
+    <h5>{{=T('Patients')}}</h5>
+</div>
+<div class="row-fluid"><!-- row start-->
+    <h6><small>{{=T('Name')}}: {{=patient_name}}</small></h6>
+</div> 
+{{if form:}}
+{{=form.custom.begin}} 
+<div class="navbar navbar-fixed-bottom">
+    {{=form.custom.button_bar}}
+</div> 
+{{pass}} 
+<div class="row-fluid">
+    <div class="span10"> 
+{{if form:}}            
+        <div class="tab-content"><!-- all tabs content start-->
+            <div class="row-fluid"><!-- row start-->
+                <div class="span7">
+                    <table class="table table-condensed table-striped table-bordered">
+                        <tr><td><label>{{=form.custom.label.date}}:</label></td>
+                            <td>{{=form.custom.widget.date}}</td></tr>
+                        <tr><td><label>{{=form.custom.label.tooth}}:</label></td>
+                            <td>{{=form.custom.widget.tooth}}</td></tr>
+                    </table>
+                </div>
+                <div class="span5">
+                     <table class="table table-condensed table-striped table-bordered span5">
+                        <tr><td><label>{{=form.custom.label.notes}}:</label></td>
+                            <td>{{=form.custom.widget.notes}}</td></tr>
+                    </table>
+                </div>                   
+            </div><!-- row end-->
+            <div class="row-fluid"><!-- row start -->
+                <div class="span7">
+                    <table class="generic_widget table table-condensed table-striped table-bordered">     
+                        <thead>
+                            <tr>
+                                <th>{{=T('Canal')}}</th>
+                                <th>{{=T('Length')}}</th>
+                                <th>{{=T('Size')}}</th>
+                                <th>{{=T('Taper')}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><label>{{=T('Mesiobuccal')}}:</label></td>
+                                <td>{{=form.custom.widget.eplength}}</td>
+                                <td>{{=form.custom.widget.epdieyr}}</td>
+                                <td>{{=form.custom.widget.eptaper}}</td></tr>
+                            <tr><td><label>{{=T('Distobuccal')}}:</label></td>
+                                <td>{{=form.custom.widget.aplength}}</td>
+                                <td>{{=form.custom.widget.apdieyr}}</td>
+                                <td>{{=form.custom.widget.aptaper}}</td></tr>
+                            <tr><td><label>{{=T('Mesiolingual')}}:</label></td>
+                                <td>{{=form.custom.widget.eglength}}</td>
+                                <td>{{=form.custom.widget.egdieyr}}</td>
+                                <td>{{=form.custom.widget.egtaper}}</td></tr>
+                            <tr><td><label>{{=T('Distolingual')}}:</label></td>
+                                <td>{{=form.custom.widget.aglength}}</td>
+                                <td>{{=form.custom.widget.agdieyr}}</td>
+                                <td>{{=form.custom.widget.agtaper}}</td></tr>
+                            <tr><td><label>{{=T('Palatal')}}:</label></td>
+                                <td>{{=form.custom.widget.ylength}}</td>
+                                <td>{{=form.custom.widget.ydieyr}}</td>
+                                <td>{{=form.custom.widget.ytaper}}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="span5">
+                    {{=grid}}
+                </div>
+            </div><!-- row end -->   
+        </div><!-- all tabs content end-->    
+{{=form.custom.end}}
+{{else:}}
+<a href="{{=add_endo_link}}" class="btn btn-large"><i class="icon-plus-sign"></i> New Endo</a>
+{{pass}}      
+    </div>
+    {{include 'default/right_menu.html'}}
+</div>

@@ -1,0 +1,23 @@
+{{extend 'layout.html'}}
+<script>
+jQuery(document).ready(function(){ 
+    jQuery('input, textarea').not(".search-query").bind('input', function(){
+        jQuery('.new, .delete').attr("disabled", "disabled");
+        jQuery('.save, .cancel').removeAttr('disabled');
+        jQuery('.cancel').removeAttr("onclick");
+        });
+    jQuery('button[type="reset"]').click(function(){
+        jQuery('.save, .cancel').attr("disabled", "disabled");
+        jQuery('.new, .delete').removeAttr("disabled");});  
+});
+</script> 
+<h6>{{=T('Medical condition')}}</h6>
+{{=form.custom.begin}}
+{{=form.custom.button_bar}}
+<div class="row"><!-- row start-->
+<table class="table table-condensed table-striped table-bordered span6"> 
+   <tr> <td><label>{{=form.custom.label.name}}:</label></td>
+        <td>{{=form.custom.widget.name}}</td></tr>
+</table>
+</div><!-- row end-->
+{{=form.custom.end}}

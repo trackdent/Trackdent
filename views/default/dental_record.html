@@ -1,0 +1,677 @@
+{{response.files.append(URL(r=request,c='static',f='css/demo_page.css'))}}
+{{response.files.append(URL(r=request,c='static',f='css/demo_table_jui.css'))}}
+{{response.files.append(URL(r=request,c='static',f='js/jquery.dataTables.js'))}}
+
+{{extend 'layout.html'}}
+
+<script>
+    var diagram_url;
+    var tpdw_state;
+    var set_edit_mode = function() {
+	tpdw_state = jQuery('#tpdw_details_edit select').attr('disabled');
+	jQuery('#del_work, #transf_work, #btn-diagram, #tools, #btn-new, .mytabs button').attr("disabled", "disabled");
+	jQuery('#save_work, #cancel_work').removeAttr('disabled');
+	jQuery('#btn-diagram').addClass("disabled");
+	jQuery('#tpdw_details_edit, .master-container').fadeTo(0,0.5);
+	jQuery('.mytabs button').removeAttr('data-toggle');
+	diagram_url=jQuery('#btn-diagram').attr('href');
+	jQuery('#btn-diagram').removeAttr('href');
+	if (tpdw_state=='disabled') {
+	    jQuery('#tpdw_details_edit').find("select, input").each(function() {
+	        $(this).attr("disabled", true);
+	    });
+	};
+    };
+    
+    jQuery(document).ready(function(){
+	jQuery('#info3').addClass('active');
+	jQuery('table, th').not('.details').disableSelection();
+	jQuery('table .details').find("select, input").each(function() {
+	    $(this).attr("disabled", true);
+	});		
+        jQuery('.even, .odd').removeClass('even odd');
+        jQuery('#del_work, #tools').attr('disabled', true);
+	{{if request.vars.tab:}}
+	    jQuery('.mytabs button:eq({{=request.vars.tab[6:]}})').tab('show');
+	    if ('{{=request.vars.tab}}' == 'li_tab3') {
+		jQuery('#mytabs1 button').removeClass('active');
+	    };
+	    if ('{{=request.vars.tab}}' == 'li_tab1') {
+		jQuery('.add_set_current_tp').addClass('disabled-item');
+	    };
+	    jQuery("#{{=request.vars.tab}}").button('toggle');
+	    jQuery('input[name="active_tab"]').attr("value", "{{=request.vars.tab}}");
+        {{else:}}
+	    jQuery('input[name="active_tab"]').attr("value", "li_tab0");
+        {{pass}}
+	jQuery('input').not('.sum_input').bind('input', set_edit_mode);
+	jQuery('select').change(set_edit_mode);
+	jQuery('.date').mousedown(set_edit_mode);
+	jQuery('button[data-toggle="tab"]').on('shown', function (e) {
+	    if (e.target.id == 'li_tab3') {
+		tpd_url = '{{=URL("default", "therapy_plan_details.load")}}' + "/" + {{=request.args(0)}};
+		web2py_component( tpd_url, 'tp_details_component');
+		jQuery('#mytabs1 button').removeClass('active');
+		jQuery('#btn-diagram').attr('href', "{{=URL('diagram', args=[request.args(0)], vars=dict(tab='tab1'))}}");
+	    }
+	    else {
+		jQuery('#li_tab3').removeClass('active');
+		jQuery('#btn-diagram').attr('href', "{{=URL('diagram', args=[request.args(0)])}}" + "?tab=" + e.target.id.slice(3));
+	    };
+	    jQuery('input[name="active_tab"]').each(function() {
+		$(this).attr("value",  e.target.id);
+	    });
+	    if (e.target.id == 'li_tab1') {
+	        jQuery('.add_set_current_tp').addClass('disabled-item');
+	    }
+	    else {
+		jQuery('.add_set_current_tp').removeClass('disabled-item');
+	    };
+	    jQuery('#del_work, #transf_work, #tools').attr('disabled', true);
+	    jQuery('table .details').find("select, input").each(function() {
+			$(this).attr("disabled", true);
+		    });
+            jQuery('tr.row_selected').css("background","");
+            jQuery('tr.row_selected').removeClass('row_selected');
+            jQuery('input').attr('checked', false);
+            jQuery('.sum_input').val('0');
+            var table = $.fn.dataTable.fnTables(true);
+	    if ( table.length > 0 ) {
+		$(table).each(function(i) {
+		    $(this).dataTable().fnAdjustColumnSizing();
+		});
+            };
+        });
+	
+        jQuery.extend( $.fn.dataTable.defaults, {
+	    "bSortClasses": false,
+            "bJQueryUI": false,
+            "bFilter": false,
+            "bInfo": false,
+            "sScrollY": "220px",
+            "bPaginate": false,
+            "bScrollCollapse": false
+    } );
+        oTable3 = $('#pre_ex').dataTable({
+            "aoColumns": [
+	    null,
+            null,
+            null,
+            { "bSortable": false }]
+        });
+        oTable1 = $('#d_rec').dataTable({
+            "aaSorting": [], 
+            "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            }); 
+        oTable2 = $('#t_p').dataTable({
+            "aaSorting": [[ 0, "desc" ]], 
+            "aoColumns": [
+            null,
+            null,
+            { "bSortable": false }]
+        });
+	oTable4 = $('#cdw').dataTable({
+            "aaSorting": [], 
+            "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            });
+        
+        jQuery(".master tr").not(':first').hover(
+            function () {
+		if (jQuery('.master-container').css('opacity')==1) {
+                    $(this).css("background","#CCCCFF");
+                }
+	    }, 
+            function () {
+                if ( !$(this).hasClass('row_selected') ) {
+                $(this).css("background", "");
+                }
+                else {
+                $(this).css("background", "#ADEBFF");
+                }
+            }
+        );
+    
+	jQuery('#button_adj_sum').click(function() {
+            jQuery('input[name="action"]').attr("value", "sum_adjust");
+	    jQuery('input[name="sum_adj"]').attr("value", jQuery('#input_sum_adjusted').val());
+	    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		jQuery('#form_details_ctp').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+	        //if (jQuery('#tpdw_details_edit input').attr('disabled')
+		jQuery('#form_tp_details').submit();
+	    }
+        });
+	jQuery('#del_work').click(function() {
+            jQuery('input[name="action"]').attr("value", "del_work");
+	    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab0') {
+		jQuery('#form_details_dr').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		jQuery('#form_details_ctp').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab2') {
+		jQuery('#form_details_pre_ex').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+		if (jQuery('#tpdw_details_edit input').attr('disabled')) {
+		    jQuery('#form_t_p').submit();
+		}
+		else {
+		    jQuery('#form_tp_details').submit();
+		}	
+	    }
+        });
+	jQuery('#transf_work').click(function() {
+            jQuery('input[name="action"]').attr("value", "transf_work");
+	    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab0') {
+		jQuery('#form_details_dr').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		jQuery('#form_details_ctp').submit();
+	    }
+        });
+	jQuery('.copy_dw').click(function() {
+	    if (!$(this).hasClass('disabled-item')) {
+		jQuery('input[name="action"]').attr("value", "copy_work");   
+		jQuery('input[name="tp_id"]').attr("value", $(this).attr('id'));
+		if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		    jQuery('#form_details_ctp').submit();
+		}
+		else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+		    jQuery('#form_tp_details').submit();
+		};
+	    };
+	});
+        jQuery('.move_dw').click(function() {
+	    if (!$(this).hasClass('disabled-item')) {
+		jQuery('input[name="action"]').attr("value", "move_work");   
+		jQuery('input[name="tp_id"]').attr("value", $(this).attr('id'));
+		if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		    jQuery('#form_details_ctp').submit();
+		}
+		else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+		    jQuery('#form_tp_details').submit();
+		};
+	    };
+	});
+        jQuery('#set_tp_current').click(function() {
+	    jQuery('input[name="action"]').attr("value", "set_tp_current");   
+            jQuery('input[name="tp_id"]').attr("value", jQuery("#t_p .row_selected input").attr("name"));
+	    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+		jQuery('#form_tp_details').submit();
+	    };
+	});
+        jQuery('#add_tp_current').click(function() {
+	    jQuery('input[name="action"]').attr("value", "add_tp_current");   
+            jQuery('input[name="tp_id"]').attr("value", jQuery("#t_p .row_selected input").attr("name"));
+            if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+                jQuery('#form_tp_details').submit();
+	    }
+	});
+	jQuery('#save_work').click(function() {
+            jQuery('input[name="action"]').attr("value", "save_work");
+	    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab0') {
+		jQuery('#form_details_dr').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		jQuery('#form_details_ctp').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab2') {
+		jQuery('#form_details_pre_ex').submit();
+	    }
+	    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab3') {
+		if (jQuery('#tp_details_edit').css('opacity')==1) {
+		    jQuery('#form_t_p').submit();
+		}
+		else {
+		    jQuery('#form_tp_details').submit();
+		    jQuery('#save_work, #cancel_work').attr("disabled", "disabled");
+		    jQuery('.mytabs button').attr('data-toggle', 'tab');
+		    jQuery('#tp_details_edit, .master-container').fadeTo(0,1);
+		    jQuery('#btn-diagram').attr('href', diagram_url);
+		    jQuery('#btn-diagram, #del_work, #btn-new, #tools, .mytabs button').removeAttr('disabled');
+		    jQuery('#btn-diagram').removeClass("disabled");
+		    jQuery('#tp_details_edit').find("select, input").each(function() {
+			$(this).attr("disabled", false);
+		    });
+		}	
+	    }
+        });
+	jQuery('#cancel_work').click(function() {
+            $('form').each(function() {
+		this.reset();
+	    });
+	    jQuery('#save_work, #cancel_work').attr("disabled", "disabled");
+	    jQuery('.mytabs button').attr('data-toggle', 'tab');
+	    jQuery('#tpdw_details_edit, #tp_details_edit, .master-container').fadeTo(0,1);
+	    jQuery('#btn-diagram').attr('href', diagram_url);
+	    jQuery('#btn-diagram, #del_work, #tools, #btn-new, .mytabs button').removeAttr('disabled');
+	    jQuery('#btn-diagram').removeClass("disabled");
+	    jQuery('#sum_input_adj').val(jQuery('#sum_input').val());
+	    if (tpdw_state=='disabled') {
+		jQuery('#tpdw_details_edit').find("select, input").each(function() {
+		    $(this).attr("disabled", 'disabled');
+		});
+	    }
+	    else {
+		var tb = jQuery('input[name="active_tab"]').attr('value');
+		if (tb=='li_tab1' || tb=='li_tab3') {
+		    jQuery('#tools').removeAttr('disabled');
+		};
+		if (tb=='li_tab0' || tb=='li_tab1') {
+		    jQuery('#transf_work').removeAttr('disabled');
+		}
+		jQuery('#tpdw_details_edit').find("select, input").each(function() {
+		    $(this).attr("disabled", false);
+	        });
+	    jQuery('#tp_details_edit').find("select, input").each(function() {
+		    $(this).attr("disabled", false);
+	        });
+	    };
+        });
+        var lastChecked = null;
+        jQuery('.master tr').not('#t_p tr').click(function(e){
+	    if (jQuery('.master-container').css('opacity')==1) {
+		if (!lastChecked) {
+		    jQuery('input', this).attr('checked', true);
+		    lastChecked = jQuery('input', this);
+		    jQuery('#del_work').attr('disabled', false);
+		    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab0') {
+			jQuery('#transf_work').attr('disabled', false);
+		    }
+		    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+			jQuery('#transf_work, #tools').attr('disabled', false);
+			jQuery('.copy_move_adjust, .move_dw, .copy_dw').removeClass('disabled-item');
+		    };
+		    jQuery('table .details').find("select, input").each(function() {
+			$(this).attr("disabled", false);
+		    });
+		    $(this).addClass('row_selected');
+		    $(this).css("background","#ADEBFF");
+		    change_record(lastChecked, this);
+                    jQuery('.sum_input').val(calculate_sum(lastChecked));
+		    return;
+		};
+		if (e.shiftKey) {
+		    var $chkboxes = $('input').not('.select_all');
+		    var $t_rows = $('tr');
+		    var start = $chkboxes.index(lastChecked);
+		    var end = $chkboxes.index(jQuery('input', this));
+		    $chkboxes.slice(Math.min(start,end) , Math.max(start,end)+ 1).attr('checked', true);
+		    //$t_rows.slice(Math.min(start,end) +1, Math.max(start,end)+ 2).addClass('row_selected');
+		    //$t_rows.slice(Math.min(start,end) +1, Math.max(start,end)+ 2).css("background","#ADEBFF");
+		    jQuery('input:checked').closest('tr').addClass('row_selected');
+		    jQuery('input:checked').closest('tr').css("background","#ADEBFF");
+		}
+		else {
+		    if ($(this).hasClass('row_selected')) {
+			$(this).css("background","");
+			$(this).removeClass('row_selected');
+			jQuery('input', this).attr('checked', false);
+			}
+		    else {
+			jQuery('tr.row_selected').css("background","");
+			jQuery('tr.row_selected').removeClass('row_selected');
+			$(this).addClass('row_selected');
+			$(this).css("background","#ADEBFF");
+			jQuery('input').attr('checked', false);
+			jQuery('input', this).attr('checked', true);
+			};
+		};
+		lastChecked = jQuery('input', this);
+		var checked_boxes = jQuery('*').not('#therapy_plan_details').find('input:checked');
+		if ($(checked_boxes).size()>0) {
+		    jQuery('#del_work').attr('disabled', false);
+		    if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab0') {
+			jQuery('#transf_work').attr('disabled', false);
+		    }
+		    else if (jQuery('input[name="active_tab"]').attr("value") == 'li_tab1') {
+		        jQuery('#transf_work, #tools').attr('disabled', false);
+			jQuery('.copy_move_adjust, .move_dw, .copy_dw').removeClass('disabled-item');
+		    };
+		    jQuery('table .details').find("select, input").each(function() {
+			$(this).attr("disabled", false);
+		    });
+                    jQuery('.sum_input').val(calculate_sum(checked_boxes));
+		}
+		else {
+		    jQuery('#del_work, #transf_work, #tools').attr('disabled', true);
+		    jQuery('table .details').find("select, input").each(function() {
+			$(this).attr("disabled", true);
+		    });
+                    jQuery('.sum_input').val('0');
+		};
+		change_record(lastChecked);
+	    };
+        });
+	var tpd_url;
+        jQuery('#t_p tr').click(function(e){
+	    if (jQuery('.master-container').css('opacity')==1) {	
+		if ($(this).hasClass('row_selected')) {
+			    $(this).css("background","");
+			    $(this).removeClass('row_selected');
+			    jQuery('input', this).attr('checked', false);
+			    }
+		else {
+		    jQuery('tr.row_selected').css("background","");
+		    jQuery('tr.row_selected').removeClass('row_selected');
+		    $(this).addClass('row_selected');
+		    $(this).css("background","#ADEBFF");
+		    jQuery('input').attr('checked', false);
+		    jQuery('input', this).attr('checked', true);
+                    jQuery('.copy_move_adjust, .move_dw, .copy_dw').addClass('disabled-item');
+		    };
+		lastChecked = jQuery('input', this);
+		var checked_boxes = jQuery('input:checked').not(jQuery('#therapy_plan_details').find('input:checked'));
+		if ($(checked_boxes).size()>0) {
+		    jQuery('#del_work, #tools').attr('disabled', false);
+		    jQuery('#tp_details_edit').find("input").each(function() {
+			$(this).attr("disabled", false);
+		    });
+		    jQuery('.add_set_current_tp').removeClass('disabled-item');
+		    change_record(lastChecked);
+		}
+		else {
+		    jQuery('#del_work, #tools').attr('disabled', true);
+		    jQuery('#tp_details_edit').find("input").each(function() {
+			$(this).attr("disabled", true);
+		    });
+		    tpd_url = '{{=URL("default", "therapy_plan_details.load")}}' + "/" + {{=request.args(0)}};
+		    web2py_component( tpd_url, 'tp_details_component');
+		};	
+	    };
+	});
+	
+        function calculate_sum(checked_boxes) {
+            var sum=0;
+            jQuery.each(checked_boxes, function(){
+                var row = $(this).closest('tr'); 
+                sum += parseFloat(jQuery("td div", row).eq(1).html().slice(1));
+            });
+            return sum;    
+        };
+        function change_record(last_box) {
+	    var cur_rec_name;
+	    var cur_rec_id;
+	    var e = jQuery(lastChecked).closest('tr')
+	    cur_rec_name = jQuery(last_box).attr('name');
+	    if (cur_rec_name.slice(0,15)=='pre_ex_work_id_') { 
+		cur_rec_id = cur_rec_name.slice(15);
+                var tooth = jQuery("td div", e).eq(0).html();
+                var dental_work = jQuery("td", e).eq(1).html();
+                var material = jQuery("td", e).eq(2).html();
+                jQuery("#pre_ex_table_tooth option").filter(function(index) { return $(this).html() == tooth; }).attr('selected', true);
+ 		jQuery("#pre_ex_table_dental_work option").filter(function(index) { return $(this).html() == dental_work }).attr('selected', true);
+		jQuery("#pre_ex_table_material option:selected").removeAttr("selected");
+		jQuery("#pre_ex_table_material option").filter(function(index) { return $(this).html() == material }).attr('selected', true);
+	        jQuery("input[name='cur_rec_id']").attr('value', cur_rec_id);
+            }
+	    else if (cur_rec_name.slice(0,8)=='work_id_') {
+		cur_rec_id = cur_rec_name.slice(8);
+                var tooth = jQuery("td div", e).eq(0).html();
+                var dental_work = jQuery("td", e).eq(2).html();
+                var material = jQuery("td", e).eq(5).html();
+		var dental_lab = jQuery("td", e).eq(4).html();
+		var charge = jQuery("td div", e).eq(1).html().slice(1);
+		var dw_date = jQuery("td", e).eq(0).html();
+                jQuery("#dr_table_tooth option, #ctp_table_tooth option").filter(function(index) { return $(this).html() == tooth; }).attr('selected', true);
+ 		jQuery("#dr_table_dental_work option, #ctp_table_dental_work option").filter(function(index) { return $(this).html() == dental_work }).attr('selected', true);
+		jQuery("#dr_table_material option:selected, #ctp_table_material option:selected").removeAttr("selected");
+		jQuery("#dr_table_material option, #ctp_table_material option").filter(function(index) { return $(this).html() == material }).attr('selected', true);
+	        jQuery("#dr_table_dental_lab option:selected, #ctp_table_dental_lab option:selected").removeAttr("selected");
+		jQuery("#dr_table_dental_lab option, #ctp_table_dental_lab option").filter(function(index) { return $(this).html() == dental_lab }).attr('selected', true);
+		jQuery("#dr_table_charge, #ctp_table_charge").attr('value', charge);
+		jQuery("#dr_table_dental_work_date, #ctp_table_dental_work_date").attr('value', dw_date);
+		jQuery("input[name='cur_rec_id']").attr('value', cur_rec_id);		
+	    }
+	    else if (cur_rec_name.slice(0,13)=='ther_plan_id_') { 
+		cur_rec_id = cur_rec_name.slice(13);
+                var tp_name = jQuery("td", e).eq(0).html();
+                var tp_date = jQuery("td", e).eq(1).html();
+		jQuery("#t_p_table_tp_name").attr('value', tp_name);
+		jQuery("#t_p_table_tp_date").attr('value', tp_date);
+	        jQuery("input[name='cur_rec_id']").attr('value', cur_rec_id);
+		tpd_url = "{{=URL("therapy_plan_details.load")}}" + "/" + {{=request.args(0)}} + "/" + cur_rec_id;
+		web2py_component(tpd_url, 'tp_details_component'); 
+            };
+	};
+    });
+</script>
+
+{{include 'default/patient_name_bar.html'}}
+{{include 'default/main_patient_menu.html'}}
+
+<div class="span10 lightcolor2 well sunken">
+    <div class='row-fluid'>
+        <div class='btn-toolbar' style="margin-top:2px;">
+            <div class='btn-group span3'>
+                <button class='btn btn-silver cancel' id='cancel_work' disabled='disabled' type='button'><i class="icon-remove"></i> {{=T('Cancel')}}</button>
+                <button class='btn btn-grey save' id='save_work' disabled='disabled' type='button'><i class="icon-ok icon-white"></i> {{=T('Save')}}</button>
+            </div>
+	    <div class='btn-group'>
+	        <a class="btn btn-silver" id='btn-diagram' href="{{=URL('diagram', args=[request.args(0)], vars=dict(tab='tab0'), user_signature=True)}}"><i class="icon-arrow-left"></i>  {{=T('Diagram')}}</a>
+	    </div>
+	    <div class="btn-group">
+		<button type="button" data-toggle="modal" data-target="#new_tp_modal" class="btn dropdown-toggle  btn-silver" id='btn-new'><i class="icon-plus"></i> {{=T('New Therapy Plan')}}
+		</button>
+	    </div>
+	    <div class='btn-group'>
+	        <button class="btn dropdown-toggle btn-silver" id='tools' data-toggle="dropdown" href="#"><i class="icon-cog"></i><span class="caret"></span>
+		</button>
+		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" id="menu1">
+		   <li class="dropdown">
+			<a class='copy_move_adjust' tabindex="-1" href="#">{{=T('Copy Dental Work to...')}}</a>
+			<ul class="dropdown-menu">
+			    {{for row in rows3:}}
+			    <li><a href='#' class='copy_dw' id=cp_dw_{{=row.id}}>{{=row.tp_name}} ({{=row.tp_date}})</a></li>
+			    {{pass}}
+			    <hr>
+			    <li><a data-toggle="modal" data-target="#new_tp_modal">{{=T('New')}}</a></li>
+			</ul>
+		    </li>
+		    <li class="dropdown">
+			<a class='copy_move_adjust' tabindex="-1" href="#">{{=T('Move Dental Work to...')}}</a>
+			<ul class="dropdown-menu">
+			    {{for row in rows3:}}
+			    <li><a href="#" class='move_dw' id=mv_dw_{{=row.id}}>{{=row.tp_name}} ({{=row.tp_date}})</a></li>
+			    {{pass}}
+			    <hr>
+			    <li><a href="#">{{=T('New')}}</a></li>
+			</ul>
+		    </li>
+                    <hr>
+                    <li>
+                        <a class='add_set_current_tp' tabindex="-1" id='add_tp_current'>{{=T('Add this Therapy Plan to Current')}}</a>
+                    </li>
+                    <li>
+                        <a class='add_set_current_tp' tabindex="-1" id='set_tp_current'>{{=T('Set this Therapy Plan as Current')}}</a>
+                    </li>
+		    <hr>
+		    <li>
+                        <a class='copy_move_adjust' tabindex="-1" href="#" id='adj_sum' data-toggle="modal" data-target="#modal_adjust_sum">{{=T('Adjust Sum')}}</a>
+                    </li>
+		</ul>
+		<button type='button' class="btn btn-silver transfer" id='transf_work' disabled='disabled'><i class="icon-chevron-left"></i><i class="icon-chevron-right"></i>{{=T('Transfer')}}</button>
+	    </div>	    
+            <div class='btn-group pull-right'>
+                <button class='btn btn-silver delete' id='del_work' type='button' onclick='return confirm("{{=T('Are you sure?')}}")' name='delete'  value='delete'><i class="icon-trash"></i>{{=T('Delete')}}</button>  
+            </div>
+        </div>
+    </div>
+    <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:7px;'>
+    
+    <div class="row-fluid">
+	<div class='pull-right'>
+            <label>{{=T('Sum')}}:  </label><input class="decimal sum_input" id='sum_input' type='text' style='width:50px;text-align:right;' disabled>
+        </div>
+        <div class="btn-toolbar pagination-centered">
+	    <div class="btn-group mytabs" data-toggle="buttons-radio" id='mytabs1'>
+	        <button type='button' style='box-shadow: 0 0 1px black;' data-toggle="tab" data-target='#tab1' class="btn btn-large tab-button active" id="li_tab0">{{=T('Dental Record')}}</button>
+		<button type='button' style='box-shadow: 0 0 1px black;' data-toggle="tab" data-target='#tab2' class="btn btn-large tab-button" id="li_tab1">{{=T('Current Therapy Plan')}}</button>
+		<button type='button' style='box-shadow: 0 0 1px black;' data-toggle="tab" data-target='#tab4' class="btn btn-large tab-button" id="li_tab2">{{=T('Initial Condition')}}</button>
+	    </div>    
+	    <div class="btn-group mytabs" data-toggle="buttons-radio" id='mytabs2'>
+		<button type='button' style='box-shadow: 0 0 1px black;' data-toggle="tab" data-target='#tab3' class="btn btn-large tab-button" id="li_tab3">{{=T('Therapy Plans')}}</button>
+	    </div>    
+	</div>
+        	    
+	<div class="lightcolor1 well" style="margin-top:-30px;">
+	    <div class="tab-content">			
+		<div class="tab-pane active" id="tab1">
+		    {{=form_details_dr.custom.begin}}
+		    <div class="row-fluid master-container">
+			{{=table1}}
+		    </div>
+		    <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:13px;'>
+		  
+		    <div class="row-fluid">
+			<table class="table table-condensed table-bordered details">
+			    <tr class="details"><td>{{=form_details_dr.custom.label.dental_work_date}}:</td><td>{{=form_details_dr.custom.widget.dental_work_date}}</td>
+				<td>{{=form_details_dr.custom.label.tooth}}:</td><td>{{=form_details_dr.custom.widget.tooth}}</td>
+				<td>{{=form_details_dr.custom.label.dental_work}}:</td><td>{{=form_details_dr.custom.widget.dental_work}}</td></tr>
+			    <tr class="details"><td>{{=form_details_dr.custom.label.charge}}:</td><td>{{=form_details_dr.custom.widget.charge}}</td>
+				<td>{{=form_details_dr.custom.label.dental_lab}}:</td><td>{{=form_details_dr.custom.widget.dental_lab}}</td>
+				<td>{{=form_details_dr.custom.label.material}}:</td><td>{{=form_details_dr.custom.widget.material}}</td></tr>
+			</table>			    
+		    </div>
+	    
+		    <input type="hidden" name="action" value="">
+		    {{=active_tab}}
+		    {{=cur_rec_id}}
+		    {{=form_details_dr.custom.end}}
+		</div>
+		<div class="tab-pane" id="tab2">
+		    {{=form_details_ctp.custom.begin}}
+		    <div class="row-fluid master-container">
+			{{=table2}}
+		    </div>
+		    <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:13px;'>
+		    <div class="row-fluid">
+			<table class="table table-condensed table-bordered details">
+			    <tr class="details"><td>{{=form_details_ctp.custom.label.dental_work_date}}:</td><td>{{=form_details_ctp.custom.widget.dental_work_date}}</td>
+				<td>{{=form_details_ctp.custom.label.tooth}}:</td><td>{{=form_details_ctp.custom.widget.tooth}}</td>
+				<td>{{=form_details_ctp.custom.label.dental_work}}:</td><td>{{=form_details_ctp.custom.widget.dental_work}}</td></tr>
+			    <tr class="details"><td>{{=form_details_ctp.custom.label.charge}}:</td><td>{{=form_details_ctp.custom.widget.charge}}</td>
+				<td>{{=form_details_ctp.custom.label.dental_lab}}:</td><td>{{=form_details_ctp.custom.widget.dental_lab}}</td>
+				<td>{{=form_details_ctp.custom.label.material}}:</td><td>{{=form_details_ctp.custom.widget.material}}</td></tr>
+			</table>			    
+		    </div>
+		    <input type="hidden" name="action" value="">
+		    {{=active_tab}}
+		    {{=cur_rec_id}}
+		    {{=form_details_ctp.custom.end}}
+		</div>
+		<div class="tab-pane" id="tab3">		
+		    <div class="row-fluid">
+			<div class="span4">
+			    {{=form_t_p.custom.begin}}
+			    <div class="row-fluid">
+				<div class="master-container">
+				{{=table3}}
+				</div>
+			    </div>
+			     <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:7px;'>
+			    <div class="row-fluid">
+				<table class="table table-condensed table-bordered details" id="tp_details_edit">
+				    <tr class="details">
+					<td>{{=form_t_p.custom.label.tp_date}}:</td><td>{{=form_t_p.custom.widget.tp_date}}</td>
+				    </tr>
+				    <tr class="details">
+					<td>{{=form_t_p.custom.label.tp_name}}:</td><td>{{=form_t_p.custom.widget.tp_name}}</td>
+				    </tr>
+				</table>	
+			    </div>
+			    <input type="hidden" name="action" value="">
+			    {{=active_tab}}
+			    {{=cur_rec_id}}
+			    {{=form_t_p.custom.end}}
+			</div>
+			<div class="span8">
+			    {{=LOAD('default', 'therapy_plan_details.load', args = [request.args(0)], ajax_trap=True, target="tp_details_component")}}
+			</div>
+		    </div>
+		</div>
+		<div class="tab-pane" id="tab4">
+		    {{=form_details_pre_ex.custom.begin}}
+		    <div class="row-fluid master-container">
+			{{=table5}}
+		    </div>
+		    <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:13px;'>
+		    <div class="row-fluid">
+			<table class="table table-condensed table-bordered details">
+			    <tr class="details"><td>{{=form_details_pre_ex.custom.label.tooth}}:</td><td>{{=form_details_pre_ex.custom.widget.tooth}}</td>
+				<td>{{=form_details_pre_ex.custom.label.dental_work}}:</td><td>{{=form_details_pre_ex.custom.widget.dental_work}}</td>
+				<td>{{=form_details_pre_ex.custom.label.material}}:</td><td>{{=form_details_pre_ex.custom.widget.material}}</td></tr>
+			</table>			    
+		    </div>
+		    <input type="hidden" name="action" value="">
+		    {{=active_tab}}
+		    {{=cur_rec_id}}
+		    {{=form_details_pre_ex.custom.end}}
+		</div>
+	    </div>
+	</div>
+    </div>    
+</div>
+<div id="new_tp_modal" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">New Therapy Plan</h3>
+        <h4><small>{{=T('Patient Name')}}: {{=patient_name}}</small></h4>
+    </div>
+     {{=form_add_tp.custom.begin}}
+    <div class="modal-body">
+       
+	<table class="table table-condensed table-bordered details">
+	    <tr><td>{{=form_add_tp.custom.label.tp_name}}:</td><td>{{=form_add_tp.custom.widget.tp_name}}</td>
+	    </tr>
+	    <tr><td>{{=form_add_tp.custom.label.tp_date}}:</td><td>{{=form_add_tp.custom.widget.tp_date}}</td>
+	    </tr>
+	</table>	
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-primary">Save changes</button> 
+    </div>
+    {{=active_tab}}
+    {{=form_add_tp.custom.end}}
+</div>
+<div id="modal_adjust_sum" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">{{=T('Adjust Sum')}}</h3>
+        <h4><small>{{=T('Patient Name')}}: {{=patient_name}}</small></h4>
+    </div>
+
+    <div class="modal-body">
+       
+	<table class="table table-condensed table-bordered details">
+	    <tr><td>{{=T('Initial Sum')}}:</td><td><input class="decimal sum_input" type='text' style='width:50px;text-align:right;' disabled></td>
+	    </tr>
+	    <tr><td>{{=T('Adjusted Sum')}}:</td><td><input class="decimal sum_input" id='input_sum_adjusted' type='text' style='width:50px;text-align:right;'></td>
+	    </tr>
+	</table>
+	
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{=T('Close')}}</button>
+        <button id='button_adj_sum' class="btn btn-primary" data-dismiss="modal" aria-hidden="true">{{=T('Save changes')}}</button>
+    </div>
+   
+</div>
+

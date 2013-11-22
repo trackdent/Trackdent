@@ -1,0 +1,202 @@
+{{response.files.append(URL(r=request,c='static',f='css/demo_page.css'))}}
+{{response.files.append(URL(r=request,c='static',f='css/demo_table_jui.css'))}}
+{{response.files.append(URL(r=request,c='static',f='js/jquery.dataTables.js'))}}
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('table, th').not('.details').disableSelection();
+    jQuery('#tp_dw').find('.even, .odd').removeClass('even odd');
+    jQuery('#sum_input').val('0');
+    //jQuery('.copy_move_adjust').addClass('disabled-item');
+    jQuery('#tpdw_details_edit').find("select, input").each(function() {
+	    $(this).attr("disabled", true);
+	});
+    jQuery("#tp_dw tr").not(':first').hover(
+	function () {
+	    if (jQuery('.master-container').css('opacity')==1) {
+		$(this).css("background","#CCCCFF");
+	    }
+	}, 
+	function () {
+	    if ( !$(this).hasClass('row_selected') ) {
+	        $(this).css("background", "");
+	    }
+	    else {
+	        $(this).css("background", "#ADEBFF");
+	    }
+	}
+    );
+    var lastChecked1 = null;
+    jQuery('#tp_dw tr').click(function(e){
+	    if (jQuery('.master-container').css('opacity')==1) {	
+		if (!lastChecked1) {
+		    jQuery('input', this).attr('checked', true);
+		    lastChecked1 = jQuery('input', this);
+		    jQuery('#del_work, #tools').attr('disabled', false);
+		    jQuery('#tpdw_details_edit').find("select, input").each(function() {
+			$(this).attr("disabled", false);
+		    });
+		    $(this).addClass('row_selected');
+		    $(this).css("background","#ADEBFF");
+		    change_record(lastChecked1, this);
+		    jQuery('.copy_move_adjust').removeClass('disabled-item');
+		    jQuery('.sum_input').val(calculate_sum(lastChecked1));
+		    jQuery('.copy_move_adjust, .move_dw, .copy_dw').removeClass('disabled-item');
+		    return;
+		    };
+		if (e.shiftKey) {
+		    var $chkboxes = $('input').not('.select_all');
+		    var $t_rows = $('tr');
+		    var start = $chkboxes.index(lastChecked1);
+		    var end = $chkboxes.index(jQuery('input', this));
+		    $chkboxes.slice(Math.min(start,end) , Math.max(start,end)+ 1).attr('checked', true);
+		    jQuery('input:checked').closest('tr').addClass('row_selected');
+		    jQuery('input:checked').closest('tr').css("background","#ADEBFF");
+		}
+		else {
+		    if ($(this).hasClass('row_selected')) {
+			$(this).css("background","");
+			$(this).removeClass('row_selected');
+			jQuery('input', this).attr('checked', false);
+			}
+		    else {
+			jQuery('#tp_dw tr.row_selected').css("background","");
+			jQuery('#tp_dw tr.row_selected').removeClass('row_selected');
+			$(this).addClass('row_selected');
+			$(this).css("background","#ADEBFF");
+			jQuery('input').attr('checked', false);
+			jQuery('input', this).attr('checked', true);
+			};
+		};
+		lastChecked1 = jQuery('input', this);
+		var checked_boxes = jQuery('#therapy_plan_details').find('input:checked');
+		if ($(checked_boxes).size()>0) {
+		    jQuery('#del_work').attr('disabled', false);
+		    jQuery('#tpdw_details_edit').find("select, input").each(function() {
+			$(this).attr("disabled", false);
+		    });
+		    jQuery('.sum_input').val(calculate_sum(checked_boxes));
+		    jQuery('.copy_move_adjust, .move_dw, .copy_dw').removeClass('disabled-item');
+		}
+		else {
+		    jQuery('#tpdw_details_edit').find("select, input").each(function() {
+			$(this).attr("disabled", true);
+		    });
+		    jQuery('.sum_input').val('0');
+		    jQuery('.copy_move_adjust, .move_dw, .copy_dw').addClass('disabled-item');
+		};
+		change_record(lastChecked1);
+	    };
+        });
+    function calculate_sum(checked_boxes) {
+            var sum=0.00;
+            jQuery.each(checked_boxes, function(){
+                var row = $(this).closest('tr'); 
+                sum += parseFloat(jQuery("td div", row).eq(1).html().slice(1));
+            });
+            return sum;    
+        };
+    function change_record(last_box) {
+	var cur_rec_name;
+	var cur_rec_id;
+	var e = jQuery(last_box).closest('tr')
+	cur_rec_name = jQuery(last_box).attr('name');
+	cur_rec_id = cur_rec_name.slice(8);
+	var tooth = jQuery("td div", e).eq(0).html();
+	var dental_work = jQuery("td", e).eq(2).html();
+	var material = jQuery("td", e).eq(5).html();
+	var dental_lab = jQuery("td", e).eq(4).html();
+	var charge = jQuery("td div", e).eq(1).html().slice(1);
+	var tpw_date = jQuery("td", e).eq(0).html();
+	jQuery("#tp_details_table_tooth option").filter(function(index) { return $(this).html() == tooth; }).attr('selected', true);
+	jQuery("#tp_details_table_dental_work option").filter(function(index) { return $(this).html() == dental_work }).attr('selected', true);
+	jQuery("#tp_details_table_material option:selected").removeAttr("selected");
+	jQuery("#tp_details_table_material option").filter(function(index) { return $(this).html() == material }).attr('selected', true);
+	jQuery("#tp_details_table_dental_lab option:selected").removeAttr("selected");
+	jQuery("#tp_details_table_dental_lab option").filter(function(index) { return $(this).html() == dental_lab }).attr('selected', true);
+	jQuery("#tp_details_table_charge").attr('value', charge);
+	jQuery("#tp_details_table_tpw_date").attr('value', tpw_date);
+	jQuery("input[name='cur_rec_id']").attr('value', cur_rec_id);     
+    };
+    var set_edit_mode_tpdw = function() {
+	jQuery('#del_work, #transf_work, #btn-diagram, #tools, #btn-new, .mytabs button').attr("disabled", "disabled");
+	jQuery('#save_work, #cancel_work').removeAttr('disabled');
+	jQuery('#btn-diagram').addClass("disabled");
+	jQuery('#tp_details_edit, .master-container').fadeTo(0,0.5);
+	jQuery('.mytabs button').removeAttr('data-toggle');
+	diagram_url=jQuery('#btn-diagram').attr('href');
+	jQuery('#btn-diagram').removeAttr('href');
+	jQuery('#tp_details_edit').find("select, input").each(function() {
+	    $(this).attr("disabled", true);
+	});	
+    };
+    jQuery('input', "#tpdw_details_edit").bind('input', set_edit_mode_tpdw); 
+    jQuery('select', "#tpdw_details_edit").change(set_edit_mode_tpdw);
+    jQuery('.date', "#tpdw_details_edit").mousedown(set_edit_mode_tpdw);
+    
+    jQuery('button[name="cancel_work"], button[name="save_work"]', "#therapy_plan_details").click(function() {
+	jQuery('.save, .cancel').attr("disabled", "disabled");
+	jQuery('#mytabs1 button').attr('data-toggle', 'tab');
+	jQuery('#tp_details_edit, .master-container').fadeTo(0,1);
+	jQuery('.diagram').attr('href', diagram_url);
+	jQuery('.delete, .diagram, .tools, .btn-new, #mytabs1 button').removeAttr('disabled');
+	jQuery('input[name="action"]').attr("value", "save_work");  
+	jQuery('#tp_details_edit').find("select, input").each(function() {
+	    $(this).attr("disabled", false);
+	    });
+    });
+    jQuery('button[name="del_work"]').click(function() {
+            jQuery('input[name="action"]').attr("value", "del_work");   
+        });
+    jQuery.extend( $.fn.dataTable.defaults, {
+	    "bSortClasses": false,
+            "bJQueryUI": false,
+            "bFilter": false,
+            "bInfo": false,
+            "sScrollY": "214px",
+            "bPaginate": false,
+            "bScrollCollapse": false
+    } );
+    oTable5 = $('#tp_dw').dataTable({
+            "aaSorting": [], 
+            "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            });
+});
+</script>
+
+<div id='therapy_plan_details'>
+{{=form_tp_details.custom.begin}}
+
+<div class="row-fluid">
+    <div class="master-container">
+    {{=table4}}
+    </div>
+</div>
+<hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:13px;'>
+<div class="row-fluid">
+    <table class="table table-condensed table-bordered details" id='tpdw_details_edit'>
+	<tr class="details">
+	    <td>{{=form_tp_details.custom.label.tpw_date}}:</td><td>{{=form_tp_details.custom.widget.tpw_date}}</td>
+	    <td>{{=form_tp_details.custom.label.tooth}}:</td><td>{{=form_tp_details.custom.widget.tooth}}</td>
+	    <td>{{=form_tp_details.custom.label.dental_work}}:</td><td>{{=form_tp_details.custom.widget.dental_work}}</td>
+	</tr>
+	<tr class="details">
+	    <td>{{=form_tp_details.custom.label.charge}}:</td><td>{{=form_tp_details.custom.widget.charge}}</td>
+	    <td>{{=form_tp_details.custom.label.dental_lab}}:</td><td>{{=form_tp_details.custom.widget.dental_lab}}</td>
+	    <td>{{=form_tp_details.custom.label.material}}:</td><td>{{=form_tp_details.custom.widget.material}}</td>
+	</tr>
+    </table>			    
+</div>
+<input type="hidden" name="action" value="">
+{{=active_tab}}
+{{=cur_rec_id}}
+{{=form_tp_details.custom.end}}
+</div>
+

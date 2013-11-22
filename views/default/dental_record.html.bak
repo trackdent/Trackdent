@@ -1,0 +1,246 @@
+{{response.files.append(URL(r=request,c='static',f='css/demo_page.css'))}}
+{{response.files.append(URL(r=request,c='static',f='css/demo_table_jui.css'))}}
+{{response.files.append(URL(r=request,c='static',f='js/jquery.dataTables.js'))}}
+
+{{extend 'layout.html'}}
+
+<script>
+    jQuery(document).ready(function(){
+        jQuery('table, th').disableSelection();
+        jQuery('.even, .odd').removeClass('even odd');
+        {{if tab:}}
+            jQuery('#mytabs1 li:eq({{=tab[6:]}}) a').tab('show');
+        {{pass}}
+        jQuery('a[data-toggle="tab"]').on('shown', function () {
+            jQuery('.btn-action').attr('disabled', true);
+            jQuery('tr.row_selected').css("background","");
+            jQuery('tr.row_selected').removeClass('row_selected');
+            jQuery('input').attr('checked', false);
+            var table = $.fn.dataTable.fnTables(true);
+	    if ( table.length > 0 ) {
+                $(table).dataTable().fnAdjustColumnSizing();
+            };
+        });
+
+        jQuery.extend( $.fn.dataTable.defaults, {
+	    "bSortClasses": false,
+            "bJQueryUI": true,
+            "bFilter": false,
+            "bInfo": false,
+            "sScrollY": "400px",
+            "bPaginate": false,
+            "bScrollCollapse": true
+    } );
+        oTable3 = $('#pre_ex').dataTable({
+            "aoColumns": [
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            });
+        oTable1 = $('#d_rec').dataTable({
+            "aaSorting": [], 
+            "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            });
+        
+        oTable2 = $('#t_p').dataTable({
+            "aaSorting": [[ 0, "desc" ]], 
+        });
+	
+	oTable4 = $('#cdw').dataTable({
+            "aaSorting": [], 
+            "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            });
+    oTable5 = $('#tp_dw').dataTable({
+            "aaSorting": [], 
+            "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            { "bSortable": false }]
+            });
+        jQuery("tr").not(':first').hover(
+           function () {
+                $(this).css("background","#CCCCFF");
+                }, 
+            function () {
+                if ( !$(this).hasClass('row_selected') ) {
+                $(this).css("background", "");
+                }
+                else {
+                $(this).css("background", "#ADEBFF");
+                }
+                }
+        );
+        jQuery('#info6').addClass('active');
+        jQuery('.btn-action').attr('disabled', true);
+        jQuery('button[name="del_work"]').click(function() {
+            jQuery('input[name="action"]').attr("value", "del_work");
+        });
+        jQuery('button[name="transf_work"]').click(function() {
+            jQuery('input[name="action"]').attr("value", "transf_work");
+        });
+        jQuery('form').submit(function() {
+	        jQuery('input[name="active_tab"]').attr("value",jQuery('li.active').attr('id'));
+	    });
+	
+        var lastChecked = null;
+        jQuery('tr').click(function(e){
+	    if (!lastChecked) {
+                    jQuery('input', this).attr('checked', true);
+                    lastChecked = jQuery('input', this);
+                    jQuery('.btn-action').attr('disabled', false);
+                    $(this).addClass('row_selected');
+                    $(this).css("background","#ADEBFF");
+                    return;
+                };
+            if (e.shiftKey) {
+                    var $chkboxes = $('input').not('.select_all');
+                    var $t_rows = $('tr');
+                    var start = $chkboxes.index(lastChecked);
+                    var end = $chkboxes.index(jQuery('input', this));
+                    $chkboxes.slice(Math.min(start,end) , Math.max(start,end)+ 1).attr('checked', true);
+                    //$t_rows.slice(Math.min(start,end) +1, Math.max(start,end)+ 2).addClass('row_selected');
+                    //$t_rows.slice(Math.min(start,end) +1, Math.max(start,end)+ 2).css("background","#ADEBFF");
+		    jQuery('input:checked').closest('tr').addClass('row_selected');
+		    jQuery('input:checked').closest('tr').css("background","#ADEBFF");
+            }
+            else {
+                if ($(this).hasClass('row_selected')) {
+                    $(this).css("background","");
+                    $(this).removeClass('row_selected');
+                    jQuery('input', this).attr('checked', false);
+                    }
+                else {
+                    jQuery('tr.row_selected').css("background","");
+                    jQuery('tr.row_selected').removeClass('row_selected');
+                    $(this).addClass('row_selected');
+                    $(this).css("background","#ADEBFF");
+                    jQuery('input').attr('checked', false);
+                    jQuery('input', this).attr('checked', true);
+                    };
+            };
+            lastChecked = jQuery('input', this);
+            var checked_boxes = $('input:checked').not('.select_all');
+             if ($(checked_boxes).size()>0)
+             {
+                 jQuery('.btn-action').attr('disabled', false);
+             }
+             else
+             {
+                 jQuery('.btn-action').attr('disabled', true);
+             };
+
+        });
+	
+    });
+	
+</script>
+<div class="row-fluid"><!-- row start-->
+    <h5>{{=T('Patients')}}</h5>
+</div>
+<div class="row-fluid"><!-- row start-->
+    <h6><small>{{=T('Name')}}: {{=patient_name}}</small></h6>
+</div>
+<div class="row-fluid">
+    <div class="span10">
+        <form>
+        <div class="row-fluid">
+            <a class="btn btn-large" style="width:80px;height:30px;" href="{{=URL('diagram', args=[request.args(0)], user_signature=True)}}"><i class="icon-arrow-left"></i><b>  Diagram</b></a>
+        </div>
+        <div class="row-fluid">
+
+            <div class="tabbable">
+		<ul id="mytabs1" class="nav nav-tabs">
+		    <li  class="active" id="li_tab0"><a href="#tab1" data-toggle="tab">Dental Record</a></li>
+		    <li id="li_tab1"><a href="#tab2" data-toggle="tab">Current Therapy Plan</a></li>
+            <li id="li_tab2"><a href="#tab3" data-toggle="tab">Therapy Plans</a></li>
+		    <li id="li_tab3"><a href="#tab4" data-toggle="tab">Initial Condition</a></li>
+		</ul>
+		<div class="tab-content">			
+		    <div class="tab-pane active" id="tab1">
+                        <div class="row-fluid">
+                            <span class="pull-right">
+                                <button type='submit' class="btn btn-action" name='transf_work' disabled='disabled'><i class="icon-chevron-right"></i></button>
+		                <button type='submit' class="btn btn-action" name="del_work" disabled="disabled"><i class="icon-trash"></i></button>
+		            </span>
+		        </div>
+                        <div class="row-fluid">
+                            {{=table1}}
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="tab2">
+                        <div class="row-fluid">
+                            <span class="pull-right">
+                                <button type='submit' class="btn btn-action" name='transf_work' disabled='disabled'><i class="icon-chevron-left"></i></button>
+		                <button type='submit' class="btn btn-action" name="del_work" disabled="disabled"><i class="icon-trash"></i></button>
+		            </span>
+		        </div>
+                        <div class="row-fluid">
+                            {{=table2}}
+                        </div>   
+                    </div>
+                    <div class="tab-pane" id="tab3">
+                        <div class="span4">
+                        {{=table3}}
+                        </div>
+                        <div class="span8">
+                        {{=table4}}
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="tab4">
+                        
+			<div class="row-fluid">
+                            <span class="pull-right">
+                                <button type='submit' class="btn btn-action" name="del_work" disabled="disabled"><i class="icon-trash"></i></button>
+		            </span>
+		        </div>
+                        <div class="row-fluid">
+			    {{=table5}}
+                        </div>
+			<div class="row-fluid">
+			    <table class="table table-condensed table-striped">
+				{{=form_details.custom.begin}}
+				<thead>
+				    <tr><th>{{=form_details.custom.label.tooth}}</th>
+				        <th>{{=form_details.custom.label.dental_work}}</th>
+				        <th>{{=form_details.custom.label.material}}</th></tr>
+				</thead>
+				<tbody>
+				    <tr><td>{{=form_details.custom.widget.tooth}}</td>
+				        <td>{{=form_details.custom.widget.dental_work}}</td>
+				        <td>{{=form_details.custom.widget.material}}</td></tr>
+				</tbody>
+				{{=form_details.custom.end}}
+			    </table>
+			</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+         <input type="hidden" name="action" value="">
+	    <input type="hidden" name="active_tab" value="">
+        </form>
+
+    </div>
+    {{include 'default/right_menu.html'}}
+</div>

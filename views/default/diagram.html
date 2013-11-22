@@ -1,0 +1,30 @@
+{{extend 'layout.html'}}
+    
+{{include 'default/patient_name_bar.html'}}
+{{include 'default/main_patient_menu.html'}}
+
+<div class=span10>
+<div class="lightcolor2 well sunken">
+<div class="row-fluid">
+    <div class="span3">     
+        {{=LOAD('default','select_dental_work.load', ajax_trap=True)}}   
+    </div>    
+    <div class='span9'>
+        <div class="row-fluid">
+            {{if request.vars.tab:}}
+                {{=LOAD('default','diagram_insert.load', args=[request.args(0)], vars=dict(tab=request.vars.tab), ajax=True)}}
+            {{else:}}
+                {{=LOAD('default','diagram_insert.load', args=[request.args(0)], ajax=True)}}
+            {{pass}}
+        </div>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#info2').addClass('active');
+});
+
+</script>

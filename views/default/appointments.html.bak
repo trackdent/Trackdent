@@ -1,0 +1,20 @@
+{{extend 'layout.html'}}
+<script>
+    jQuery(document).ready(function(){
+        jQuery('.active').removeClass('active');
+        jQuery('#info4').addClass('active');
+});
+</script>
+<div class="row-fluid"><!-- row start-->
+    <h5>{{=T('Patients')}}</h5>
+</div>
+<div class="row-fluid"><!-- row start-->
+    <h6><small>{{=T('Name')}}: {{=patient_name}}</small></h6>
+</div> 
+
+<div class="row-fluid">
+    <div class="span10"> 
+        {{=grid}}      
+    </div>
+    {{include 'default/right_menu.html'}}
+</div>

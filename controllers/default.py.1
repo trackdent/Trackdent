@@ -1,0 +1,589 @@
+# -*- coding: utf-8 -*-
+# this file is released under public domain and you can use without limitations
+
+#########################################################################
+## This is a samples controller
+## - index is the default action of any application
+## - user is required for authentication and authorization
+## - download is for downloading files uploaded in the db (does streaming)
+## - call exposes all registered services (none by default)
+#########################################################################
+#from datetime import datetime
+
+import teethchart_functions
+
+def index():
+
+    if request.vars.lastname:
+        search_str=request.vars.lastname.capitalize()
+        pattern = request.vars.lastname.capitalize() + '%'
+        query = db.patients.lastname.like(pattern)
+    else:
+        query = db.patients.lastname
+        search_str=""
+    form = SQLFORM.grid(query,
+        links=[dict(header='',body=lambda row: SPAN(A(T('Dental History/Plan'), _href=URL("default","patients",args=[row.id])),
+        A(T('Endodontics'), _href=URL("default","patient_endo",args=[row.id])),
+        A(T('Colors'), _href=URL("default","patients",args=[row.id])),
+        A(T('Images'), _href=URL("default","patients",args=[row.id])),
+        A(T('Economics'), _href=URL("patient_create",args=[row.id])),
+        _class='mybuttons'
+        ))],
+        fields=[db.patients.lastname, db.patients.firstname, db.patients.address, db.patients.city, db.patients.birthday,                        db.patients.datelastvisit],
+        deletable=False, editable=False, create=False, details=False, searchable=False, orderby=~db.patients.datelastvisit, paginate=20, csv=False)
+    add_patient_link=URL("patient_update")
+    return dict(form=form, add_patient_link=add_patient_link)
+
+def patient_update():
+    record = db.patients(request.args(0)) # returns an object of type row (section 6.17.2 web2py book: "Fetching a row")
+    form=SQLFORM( db.patients, record )
+    form.element('select[name=sex]')['_style']='width:80px'
+    form.element('input[name=birthday]')['_style']='width:150px'
+    form.element('input[name=datefirstvisit]')['_style']='width:80px'
+    form.element('input[name=datelastvisit]')['_style']='width:80px'
+    form.element('input[name=daterecall]')['_style']='width:80px'
+    form.element('input[name=balance]')['_style']='width:50px'
+    form.element('textarea[name=notes]')['_style']='width:460px;height:100px'
+    form.element('input[name=lastname]')['_style']='width:150px'
+    form.element('input[name=firstname]')['_style']='width:150px'
+    form.element('input[name=fathername]')['_style']='width:150px'
+    form.element('input[name=profession]')['_style']='width:150px'
+    form.element('input[name=insurance]')['_style']='width:150px'
+    form.element('input[name=referredby]')['_style']='width:150px'
+    form.element('input[name=referredby_tel]')['_style']='width:150px'
+    button_bar=DIV(
+        DIV(
+        A(T('NEW'),_class='btn btn-large new', _href=URL(r=request, f='patient_update')),
+        BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", _value="delete"),
+        _class="btn-group"
+   ),
+        DIV(
+        BUTTON(T('CANCEL'), _class='btn btn-large span2 cancel', _type='reset'),
+        BUTTON(T('SAVE'), _class='btn btn-large span2 save', _type="submit"),
+        _class="btn-group"
+    ), _class="btn-toolbar"
+    )
+    form[0].insert(0, button_bar)
+    form.custom.button_bar=button_bar
+    active_tab=INPUT(_type="hidden", _name="active_tab")
+    form[0].insert(0, active_tab )
+    form.custom.active_tab=active_tab
+    del form[0][-1]
+    if record:
+        session.current_id = record.id
+        patient_name='%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+        form.element('.save')["_disabled"] = 'disabled'
+        form.element('.cancel')["_disabled"] = 'disabled'
+        if record.birthday:
+            form.custom.patient_age=int(round((datetime.date.today() - record.birthday).days/365.25))
+        else:
+            form.custom.patient_age=T("Unknown")
+    else:
+        patient_name = T("New Patient")
+        form.element('.new')["_disabled"] = 'disabled'
+        form.element('.new')["_onclick"] = 'return false'
+        form.element('.delete')["_disabled"] = 'disabled'
+        form.element('.cancel')["_onclick"] = "window.location.href='" + URL("patient_update", args=session.current_id) + "'"
+    if form.process().accepted:
+        response.flash = False
+        if request.vars.delete:
+            form.deleted = True
+            record.delete_record()
+            redirect(URL('index'))
+        if form.vars.birthday:
+            form.custom.patient_age=int(round((datetime.date.today() - form.vars.birthday).days/365.25))
+        else:
+            form.custom.patient_age=T("Unknown")
+        if form.vars.active_tab:
+            tab=form.vars.active_tab
+        redirect(URL('patient_update', args = form.vars.id, vars=dict(tab=tab)))
+    elif form.errors:
+        response.flash = T('there are errors!')
+    delete_button=BUTTON(IMG(_class="icon-trash"), _type="submit", _class="delete", _name="delete", _onclick="return confirm('Are you sure?')")
+    return dict(form=form, patient_name=patient_name)
+
+def medical_delete():
+    remove = db(db.medical_conditions.id==request.args(0)).delete()
+    if remove:
+        redirect(URL('patient_update', args=session.current_id))
+    return dict(remove=remove)
+
+#Δύο τρόποι για delete: 
+#a)Με <a> και link για controller/view, delete manually (view δεν χρειάζεται, γίνεται redirect)
+#    remove = db(db.medical_conditions.id==request.args(0)).delete()
+#    if remove:
+#        redirect(URL('patient_update', args=session.current_id))
+#b)Με  BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", #   _value="delete")
+#To BUTTON πρέπει να είναι μέσα στην φόρμα.
+#Και:
+#    if form.process().accepted:
+#        response.flash = False
+#        if request.vars.delete:
+#            form.deleted = True
+#            record.delete_record()
+#            redirect(URL('patient_update', args=session.current_id))
+#
+#Ο δεύτερος τρόπος απαιτεί φόρμα.
+#Ο πρώτος απαιτεί ξεχωριστή controller function για delete.
+
+def medical_update():
+    record = db.medical_conditions(request.args(0))
+    form = SQLFORM(db.medical_conditions, record, showid=False)
+    button_bar=DIV(
+        DIV(
+        A(I(_class="icon-chevron-left"),_class='btn btn-large span2', _href=URL('patient_update', args=session.current_id)),
+        A(T('NEW'),_class='btn btn-large new', _href=URL('medical_update')),
+        BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", _value="delete"),
+        _class="btn-group"
+   ),
+        DIV(
+        BUTTON(T('CANCEL'), _class='btn btn-large span2 cancel', _type='reset'),
+        BUTTON(T('SAVE'), _class='btn btn-large span2 save', _type="submit")
+        ,
+        _class="btn-group"
+    ), _class="btn-toolbar"
+    )
+    form[0].insert(0, button_bar)
+    form.custom.button_bar=button_bar
+    del form[0][-1]
+    if record:
+        session.current_med_id = record.id
+        form.element('.save')["_disabled"] = 'disabled'
+        form.element('.cancel')["_disabled"] = 'disabled'
+    else:
+        form.element('.new')["_disabled"] = 'disabled'
+        form.element('.new')["_onclick"] = 'return false'
+        form.element('.delete')["_disabled"] = 'disabled'
+        form.element('.cancel')["_onclick"] = "window.location.href='" + URL("medical_update", args=session.current_med_id) + "'"
+    if form.process().accepted:
+        response.flash = False
+        if request.vars.delete:
+            form.deleted = True
+            record.delete_record()
+            redirect(URL('patient_update', args=session.current_id))
+        redirect(URL('medical_update', args=form.vars.id))
+    elif form.errors:
+        response.flash = T('there are errors!')
+    return dict(form=form)
+
+def endo():
+    db.endo.patient.default = request.args(0)
+    grid=SQLFORM.grid(db.endo.patient==request.args(0), orderby=~db.endo.date, deletable=False, details=False, editable=False, searchable=False, sortable=False, create=False, csv=False, paginate=20, fields=[db.endo.date, db.endo.tooth], maxtextlength=2, user_signature=False)
+    if not request.args(1) and not db(db.endo.patient==request.args(0)).select(orderby=~db.endo.date).first():
+        form=None
+    else:
+        if request.args(1)=='new':
+            record=None
+        elif not request.args(1):
+            record = db(db.endo.patient==request.args(0)).select(orderby=~db.endo.date).first()
+        else:
+            record = db.endo(request.args(1)) # returns an object of type row (section 6.17.2 web2py book: "Fetching a row")
+        form=SQLFORM( db.endo, record )
+        form.element('input[name=date]')['_style']='width:80px'
+        form.element('select[name=tooth]')['_style']='width:50px'
+        form.element('textarea[name=notes]')['_style']='width:350px; height:60px'
+        form.element('select[name=eplength]')['_style']='width:60px'
+        form.element('select[name=epdieyr]')['_style']='width:60px'
+        form.element('select[name=eptaper]')['_style']='width:60px'
+        form.element('select[name=eglength]')['_style']='width:60px'
+        form.element('select[name=egdieyr]')['_style']='width:60px'
+        form.element('select[name=egtaper]')['_style']='width:60px'
+        form.element('select[name=aplength]')['_style']='width:60px'
+        form.element('select[name=apdieyr]')['_style']='width:60px'
+        form.element('select[name=aptaper]')['_style']='width:60px'
+        form.element('select[name=aglength]')['_style']='width:60px'
+        form.element('select[name=agdieyr]')['_style']='width:60px'
+        form.element('select[name=agtaper]')['_style']='width:60px'
+        form.element('select[name=ylength]')['_style']='width:60px'
+        form.element('select[name=ydieyr]')['_style']='width:60px'
+        form.element('select[name=ytaper]')['_style']='width:60px'
+        button_bar=DIV(
+            DIV(
+            A(T('NEW'),_class='btn btn-large new', _href=URL(r=request, f='endo', args=[request.args(0), 'new'])),
+            BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", _value="delete"),
+            _class="btn-group"
+       ),
+            DIV(
+            BUTTON(T('CANCEL'), _class='btn btn-large span2 cancel', _type='reset'),
+            BUTTON(T('SAVE'), _class='btn btn-large span2 save', _type="submit"),
+            _class="btn-group"
+        ), _class="btn-toolbar"
+        )
+        form[0].insert(0, button_bar)
+        form.custom.button_bar=button_bar
+        del form[0][-1]
+        if record:
+            session.current_endo_id = record.id
+            form.element('.save')["_disabled"] = 'disabled'
+            form.element('.cancel')["_disabled"] = 'disabled'
+        else:
+            form.element('.new')["_disabled"] = 'disabled'
+            form.element('.new')["_onclick"] = 'return false'
+            form.element('.delete')["_disabled"] = 'disabled'
+            if db(db.endo.patient==request.args(0)).select():
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("endo", args=[session.current_id, session.current_endo_id]) + "'"
+            else:
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("endo", args=[session.current_id]) + "'"
+        if form.process().accepted:
+            response.flash = False
+            if request.vars.delete:
+                form.deleted = True
+                record.delete_record()
+                redirect(URL("endo", args=[session.current_id]))
+            redirect(URL('endo', args = [session.current_id, form.vars.id] ))
+        elif form.errors:
+            response.flash = T('there are errors!')
+    patient_name='%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+    add_endo_link=URL("endo", args=[request.args(0), 'new'])
+    return dict(form=form, grid=grid, patient_name=patient_name, add_endo_link=add_endo_link )
+
+def color():
+    db.colors.patient.default = request.args(0)
+    grid=SQLFORM.grid(db.colors.patient==request.args(0), orderby=~db.colors.date, deletable=False, details=False, editable=False, sortable=False, searchable=False, create=False, csv=False, paginate=20, fields=[db.colors.date, db.colors.tooth, db.colors.n_color, db.colors.i_color, db.colors.m_color, db.colors.d_color], maxtextlength=2, user_signature=False)
+    if not request.args(1) and not db(db.colors.patient==request.args(0)).select(orderby=~db.colors.date).first():
+        form=None
+    else:
+        if request.args(1)=='new':
+            record=None
+        elif not request.args(1):
+            record = db(db.colors.patient==request.args(0)).select(orderby=~db.colors.date).first()
+        else:
+            record = db.colors(request.args(1)) # returns an object of type row (section 6.17.2 web2py book: "Fetching a row")
+        form=SQLFORM( db.colors, record )
+        form.element('select[name=tooth]')['_style']='width:50px'
+        form.element('input[name=n_color]')['_style']='width:80px'
+        form.element('input[name=i_color]')['_style']='width:80px'
+        form.element('input[name=m_color]')['_style']='width:80px'
+        form.element('input[name=d_color]')['_style']='width:80px'
+        button_bar=DIV(
+            DIV(
+            A(T('NEW'), _class='btn btn-large new', _href=URL(r=request, f='color', args=[request.args(0), 'new'])),
+            BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", _value="delete"),
+            _class="btn-group"
+            ),
+            DIV(
+            BUTTON(T('CANCEL'), _class='btn btn-large span2 cancel', _type='reset'),
+            BUTTON(T('SAVE'), _class='btn btn-large span2 save', _type="submit"),
+            _class="btn-group"
+            ),
+            _class="btn-toolbar"
+            )
+        form[0].insert(0, button_bar)
+        form.custom.button_bar=button_bar
+        del form[0][-1]
+        if record:
+            session.current_color = record.id
+            form.element('.save')["_disabled"] = 'disabled'
+            form.element('.cancel')["_disabled"] = 'disabled'
+        else:
+            form.element('.new')["_disabled"] = 'disabled'
+            form.element('.new')["_onclick"] = 'return false'
+            form.element('.delete')["_disabled"] = 'disabled'
+            if db(db.colors.patient==request.args(0)).select():
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("color", args=[session.current_id, session.current_color]) + "'"
+            else:
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("color", args=[session.current_id]) + "'"
+        if form.process().accepted:
+            response.flash = False
+            if request.vars.delete:
+                form.deleted = True
+                record.delete_record()
+                redirect(URL("color", args=[session.current_id]))
+            redirect(URL('color', args = [session.current_id, form.vars.id] ))
+        elif form.errors:
+            response.flash = T('there are errors!')
+    patient_name='%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+    add_color_link=URL("color", args=[request.args(0),'new'])
+    return dict(form=form, grid=grid, patient_name=patient_name, add_color_link=add_color_link)
+
+def payments():
+    db.payments.patient.default = request.args(0)
+    grid=SQLFORM.grid(db.payments.patient==request.args(0),  orderby=~db.payments.date, deletable=False, details=False, editable=False, sortable=False, searchable=False, create=False, csv=False, paginate=20, fields=[db.payments.date, db.payments.amount, db.payments.receipt_no, db.payments.receipt_amount], maxtextlength=2, user_signature=False)
+    if not request.args(1) and not db(db.payments.patient==request.args(0)).select(orderby=~db.payments.date).first():
+        form=None
+    else:
+        if request.args(1)=='new':
+            record=None
+        elif not request.args(1):
+            record = db(db.payments.patient==request.args(0)).select(orderby=~db.payments.date).first()
+        else:
+            record = db.payments(request.args(1)) # returns an object of type row (section 6.17.2 web2py book: "Fetching a row")
+        form=SQLFORM( db.payments, record )
+        form.element('input[name=date]')['_style']='width:80px'
+        form.element('input[name=amount]')['_style']='width:80px'
+        form.element('input[name=receipt_no]')['_style']='width:80px'
+        form.element('input[name=receipt_amount]')['_style']='width:80px'
+        button_bar=DIV(
+            DIV(
+            A(T('NEW'), _class='btn btn-large new', _href=URL('payments', args=[request.args(0), 'new'])),
+            BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", _value="delete"),
+            _class="btn-group"
+       ),
+            DIV(
+            BUTTON(T('CANCEL'), _class='btn btn-large span2 cancel', _type='reset'),
+            BUTTON(T('SAVE'), _class='btn btn-large span2 save', _type="submit"),
+            _class="btn-group"
+        ), _class="btn-toolbar"
+        )
+        form[0].insert(0, button_bar)
+        form.custom.button_bar=button_bar
+        del form[0][-1]
+        if record:
+            session.current_payment = record.id
+            form.element('.save')["_disabled"] = 'disabled'
+            form.element('.cancel')["_disabled"] = 'disabled'
+        else:
+            form.element('.new')["_disabled"] = 'disabled'
+            form.element('.new')["_onclick"] = 'return false'
+            form.element('.delete')["_disabled"] = 'disabled'
+            if db(db.payments.patient==request.args(0)).select():
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("payments", args=[session.current_id, session.current_payment]) + "'"
+            else:
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("payments", args=[session.current_id]) + "'"
+        if form.process().accepted:
+            response.flash = False
+            if request.vars.delete:
+                form.deleted = True
+                record.delete_record()
+                redirect(URL("payments", args=[session.current_id]))
+            redirect(URL('payments', args = [session.current_id, form.vars.id] ))
+        elif form.errors:
+            response.flash = T('there are errors!')
+    add_payment_link=URL("payments", args=[request.args(0),'new'])
+    patient_name = '%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+    patient_job = db.patients[request.args(0)].profession
+    patient_address = '%(address)s %(city)s' %dict(address = db.patients[request.args(0)].address, city = db.patients[request.args(0)].city)
+    return dict(form=form, grid=grid, patient_name=patient_name, patient_job=patient_job, patient_address=patient_address, add_payment_link=add_payment_link)
+
+def images():
+    img=None
+    db.images.patient.default = request.args(0)
+    grid=SQLFORM.grid(db.images.patient==request.args(0), orderby=~db.images.date, fields=[db.images.date, db.images.title, db.images.file], deletable=False, details=False, editable=False, sortable=False, searchable=False, create=False, csv=False, paginate=5, maxtextlength=2, user_signature=False, links = [dict(header=T('Preview'), body=lambda row: IMG(_src=URL('download', args=row.file), _height="60px"))] )
+    if not request.args(1) and not db(db.images.patient==request.args(0)).select(orderby=~db.images.date).first():
+        form=None
+    else:
+        if request.args(1)=='new':
+            record=None
+        elif not request.args(1):
+            record = db(db.images.patient==request.args(0)).select(orderby=~db.images.date).first()
+        else:
+            record = db.images(request.args(1)) # returns an object of type row (section 6.17.2 web2py book: "Fetching a row")
+        form=SQLFORM( db.images, record )
+        form.element('input[name=date]')['_style']='width:80px'
+        button_bar=DIV(
+            DIV(
+            A(IMG(_class="icon-plus-sign"), T('  NEW'), _class='btn btn-large new', _href=URL('images', args=[request.args(0), 'new'])),
+            BUTTON(T('DELETE'), _class='btn btn-large delete', _onclick='return confirm("' + T("Are you sure?") + '")', _type="submit", _name="delete", _value="delete"),
+            _class="btn-group"
+            ),
+            DIV(
+            BUTTON(T('CANCEL'), _class='btn btn-large span2 cancel', _type='reset'),
+            BUTTON(T('SAVE'), _class='btn btn-large span2 save', _type="submit"),
+            _class="btn-group"
+            ), _class="btn-toolbar"
+            )
+        form[0].insert(0, button_bar)
+        form.custom.button_bar=button_bar
+        del form[0][-1]
+        if record:
+            session.current_image = record.id
+            form.element('.save')["_disabled"] = 'disabled'
+            form.element('.cancel')["_disabled"] = 'disabled'
+            img=IMG(_src=URL('download', args=record.file), _height="280px")
+        else:
+            form.element('.new')["_disabled"] = 'disabled'
+            form.element('.new')["_onclick"] = 'return false'
+            form.element('.delete')["_disabled"] = 'disabled'
+            if db(db.images.patient==request.args(0)).select():
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("images", args=[session.current_id, session.current_image]) + "'"
+            else:
+                form.element('.cancel')["_onclick"] = "window.location.href='" + URL("images", args=[session.current_id]) + "'"
+        if form.process().accepted:
+            response.flash = False
+            if request.vars.delete:
+                form.deleted = True
+                record.delete_record()
+                redirect(URL("images", args=[session.current_id]))
+            redirect(URL('images', args = [session.current_id, form.vars.id] ))
+        elif form.errors:
+            response.flash = T('there are errors!')
+    add_image_link=URL("images", args=[request.args(0),'new'])
+    patient_name = '%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+    return dict(grid=grid, add_image_link=add_image_link, patient_name=patient_name, img=img, form=form)
+
+def diagram():
+    patient_name = '%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+    dental_works = teethchart_functions.get_dental_works(db, request.args(0))
+    insert_forms = {}
+    categ_names = {}
+    for categ in db().select(db.dental_work_categories.ALL):
+        d_works_insert_fields=[]
+        query = (db.dental_works.category == categ.id)
+        d_works_insert_fields.append(Field('d_works_field', db.dental_works, requires=IS_IN_DB(db(query), 'dental_works.id', '%(name)s', zero=None)))
+        d_works_insert_fields.append(db.dental_record.dental_work_date)
+        d_works_insert_fields.append(db.dental_record.material)
+        d_works_insert_fields.append(db.dental_record.dental_lab)
+        d_works_insert_fields.append(db.dental_record.charge)
+        form = SQLFORM.factory(*d_works_insert_fields)
+        form.element('select[name=d_works_field]')['_style']='width:100%;'
+        form.element('select[name=d_works_field]')['_size']='15'
+        form.element('input[name=dental_work_date]')['_style']='width:50%;'
+        form.element('input[name=charge]')['_style']='width:30%;'
+        form.element('select[name=material]')['_style']='width:90%;'
+        form.element('select[name=dental_lab]')['_style']='width:90%;'
+        insert_forms[categ.id] = form
+        categ_names[categ.id] = categ.name
+        form_name = 'form_' + str(categ.id)
+        if form.process(formname = form_name).accepted:
+            response.flash = 'form accepted'    
+            session.dental_work = form.vars.d_works_field
+            session.dental_work_date = form.vars.dental_work_date
+            session.charge = form.vars.charge
+            session.material = form.vars.material
+            session.dental_lab = form.vars.dental_lab
+        elif form.errors:
+            response.flash = 'form has errors'
+    prices = {}
+    for row in db().select(db.dental_works.id, db.dental_works.price):
+        prices[row.id] = row.price
+    return dict(dental_works = dental_works, patient_name = patient_name, insert_forms = insert_forms, categ_names = categ_names, prices = prices)
+
+def diagram_insert(): 
+    
+    form = FORM(hidden = dict(x_value = '', y_value = ''), _id = 'x_y_vals') 
+    if form.process().accepted:
+        x_value = request.vars.x_value
+        y_value = request.vars.y_value
+        ddental_work = session.dental_work
+        separation = db.dental_works(ddental_work).separation
+        dtooth = teethchart_functions.get_tooth_from_coordinates(db, x_value, y_value, separation)
+        dpatient = session.current_id
+        ddental_work_date = session.dental_work_date
+        
+        dcharge = session.charge
+        ddental_lab = session.dental_lab
+        dmaterial = session.material
+        db.dental_record.insert(patient = dpatient,  dental_work = ddental_work, dental_work_date = ddental_work_date, charge = dcharge,
+                                tooth = dtooth, dental_lab = ddental_lab, material = dmaterial
+                                )
+    dental_works = teethchart_functions.get_dental_works(db, request.args(0))                          
+    return dict(form = form, dental_works = dental_works)
+    
+def dental_record():
+    ids=[]
+    for i in request.vars:
+        if i[:8]=='work_id_': 
+            ids.append(i[8:])   
+    for i in ids:
+        db(db.dental_record.id == i).delete()
+    grid = SQLFORM.grid(db.dental_record.patient == request.args(0), orderby= ~db.dental_record.dental_work_date, 
+                        deletable=False, details=False, editable=False, sortable=True, searchable=False, create=False, 
+                        csv=False, paginate=20, args=[request.args(0)], fields=[db.dental_record.dental_work_date, 
+                        db.dental_record.tooth, db.dental_record.dental_work, db.dental_record.charge, db.dental_record.dental_lab,
+                        db.dental_record.material], maxtextlength=20, user_signature=False, ui='jquery-ui',
+                        links=[dict(header='', body=lambda row: 
+                        SPAN(INPUT(_type='checkbox', _name='work_id_'+str(row.id)))) ] 
+    )     
+    patient_name = '%(lastname)s %(firstname)s' % dict(lastname=db.patients[request.args(0)].lastname, firstname=db.patients[request.args(0)].firstname)
+    rows = db(db.dental_record.patient == request.args(0)).select(db.dental_record.dental_work_date, db.dental_record.tooth, db.dental_record.dental_work,
+                                                                  db.dental_record.charge, db.dental_record.dental_lab, db.dental_record.material)
+    extracolumns = [{'label':INPUT(_type='checkbox') , 'selected': False, 'class':'', 'width':'', 'content':lambda row,rc: SPAN(INPUT(_type='checkbox', _name='work_id_'))}]
+    table1 = SQLTABLE(rows, _id="example2", headers='labels', extracolumns=extracolumns)
+    return locals()
+
+def delete_dental_record():
+    remove = db(db.dental_record.id == request.args(0)).delete()
+    if remove:
+        redirect(URL('dental_record', args=session.current_id))
+    return dict(remove=remove)
+      
+        
+def calendar():
+    form=SQLFORM( db.appointments )
+    form.element('input[name=ap_start]')['_style']='width:70px'
+    form.element('input[name=ap_end]')['_style']='width:70px'
+    form.element('textarea[name=notes]')['_style']='width:360px;height:80px'
+    rows=db(db.appointments).select()   
+    if form.process().accepted:
+        response.flash = 'record Saved!' 
+        if request.vars.delete:
+            db.appointments().delete_record()
+            redirect(URL('index')) 
+        redirect(URL('calendar', args=(request.args or session.current_id)))  
+    elif form.errors:
+        response.flash = T('there are errors!')
+    return dict(form=form, rows=rows)
+
+def delete_appointment():
+    remove = db(db.appointments.id==request.args(0)).delete()
+    if remove:
+        redirect(URL('calendar', args=session.current_id))
+
+def update_appointment():
+    if request.vars['title']:
+        db(db.appointments.id==request.args(0)).validate_and_update(title=request.vars['title'])
+    if request.vars['ap_end']:
+        db(db.appointments.id==request.args(0)).validate_and_update(ap_end=request.vars['ap_end'])
+    if request.vars['ap_start']:
+        db(db.appointments.id==request.args(0)).validate_and_update(ap_start=request.vars['ap_start'])
+    if request.vars['notes']:
+        db(db.appointments.id==request.args(0)).validate_and_update(notes=request.vars['notes'])
+    if request.vars['patient']:
+        db(db.appointments.id==request.args(0)).validate_and_update(patient=request.vars['patient'])   
+    redirect(URL('calendar', args=session.current_id))
+
+def appointments():
+    grid=SQLFORM.grid(db.appointments.patient==request.args(0),  orderby=~db.appointments.ap_start, deletable=False, details=False, editable=False, sortable=False, searchable=False, create=False, csv=False, paginate=20, fields=[db.appointments.ap_start, db.appointments.ap_end, db.appointments.notes], maxtextlength=2, user_signature=False, links=[dict(header=T('Duration in minutes'), body=lambda row:(row.ap_end-row.ap_start).seconds/60)])
+    patient_name = '%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
+    return dict(grid=grid, patient_name=patient_name)
+
+def user():
+    """
+    exposes:
+    http://..../[app]/default/user/login
+    http://..../[app]/default/user/logout
+    http://..../[app]/default/user/register
+    http://..../[app]/default/user/profile
+    http://..../[app]/default/user/retrieve_password
+    http://..../[app]/default/user/change_password
+    use @auth.requires_login()
+        @auth.requires_membership('group name')
+        @auth.requires_permission('read','table name',record_id)
+    to decorate functions that need access control
+    """
+    return dict(form=auth())
+
+
+def download():
+    """
+    allows downloading of uploaded files
+    http://..../[app]/default/download/[filename]
+    """
+    return response.download(request,db)
+
+def call():
+    """
+    exposes services. for example:
+    http://..../[app]/default/call/jsonrpc
+    decorate with @services.jsonrpc the functions to expose
+    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
+    """
+    return service()
+
+
+@auth.requires_signature()
+def data():
+    """
+    http://..../[app]/default/data/tables
+    http://..../[app]/default/data/create/[table]
+    http://..../[app]/default/data/read/[table]/[id]
+    http://..../[app]/default/data/update/[table]/[id]
+    http://..../[app]/default/data/delete/[table]/[id]
+    http://..../[app]/default/data/select/[table]
+    http://..../[app]/default/data/search/[table]
+    but URLs must be signed, i.e. linked with
+      A('table',_href=URL('data/tables',user_signature=True))
+    or with the signed load operator
+      LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
+    """
+    return dict(form=crud())

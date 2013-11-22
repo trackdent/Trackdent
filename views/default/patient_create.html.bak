@@ -1,0 +1,7 @@
+{{extend 'layout.html'}}
+<h6>Patient Data for:</h6>
+<h3>{{=T("New Patient")}}</h3>
+
+<br/>
+{{=button_bar}}
+{{=form}}

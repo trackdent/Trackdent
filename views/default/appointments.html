@@ -1,0 +1,53 @@
+{{response.files.append(URL(r=request,c='static',f='css/demo_page.css'))}}
+{{response.files.append(URL(r=request,c='static',f='css/demo_table_jui.css'))}}
+{{response.files.append(URL(r=request,c='static',f='js/jquery.dataTables.js'))}}
+
+{{extend 'layout.html'}}
+
+<script>
+    jQuery(document).ready(function(){
+        jQuery('table, th').disableSelection();
+        jQuery('#info4').addClass('active');     
+        jQuery('.master tr').click(function(e){
+            if ($(this).hasClass('row_selected')) {
+                $(this).css("background","");
+                $(this).removeClass('row_selected');
+                }
+            else {
+                jQuery('tr.row_selected').css("background","");
+                jQuery('tr.row_selected').removeClass('row_selected');
+                $(this).addClass('row_selected'); 
+                };
+	});
+        jQuery.extend( $.fn.dataTable.defaults, {
+	    "bSortClasses": false,
+            "bFilter": false,
+            "bInfo": false,
+            "sScrollY": "420px",
+            "bPaginate": false,
+            "bScrollCollapse": false
+        });
+        $('#appointments').dataTable({
+	    "sDom": 'Rlfrtip',
+	    "oColReorder": {
+		"aiOrder": [ 0, 2, 1 ]
+	    }
+	});
+        $('#table_d_works').dataTable();
+    });
+</script>
+
+{{include 'default/patient_name_bar.html'}}
+{{include 'default/main_patient_menu.html'}}
+
+<div class='span10 lightcolor2 well sunken'>
+    <div class="row-fluid">
+        <div class="lightcolor1 well span6"> 
+            {{=table1}}
+        </div>
+         <div class="lightcolor1 well span6"> 
+            {{=table2}}
+        </div> 
+    </div>
+</div>
+

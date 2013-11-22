@@ -1,0 +1,84 @@
+<div class="btn-toolbar well well-small lightcolor1">    
+    <ul class="nav nav-list">
+	{{for categ, form in insert_forms.iteritems():}}
+	<li>
+	    <div class="btn-group">
+		<button class="btn" style="width:80px;height:60px;" onclick="select_dental_work({{=categ}})"><b>{{=categ_names[categ]}}</b></button>
+		<button class="btn btn-large dropdown-toggle" data-toggle="dropdown" style="height:60px;"><span class="caret"></span></button>
+		<ul class="dropdown-menu">
+		    <!-- dropdown menu links -->
+		    {{for d_work in form.custom.widget.d_works_field:}}
+		    <li><a class="quick_save_hyperlink" id_work='{{=d_work["_value"]}}' id_categ="{{=categ}}">{{=d_work[0]}}</a></li>
+		    {{pass}}
+		</ul>
+	    </div>
+	</li>
+	<div id="select_dental_work_modal_{{=categ}}" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop='true'>
+	    <div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h3 id="myModalLabel">{{=T('Dental Work Selection')}}</h3>
+	    </div>
+	    {{=form.custom.begin}}
+	    <div class="modal-body">
+		<div class="row-fluid">
+		    <div class="span6">
+			{{=form.custom.widget.d_works_field}}
+		    </div>
+		    <div class="span6">
+			<table class="table table-condensed table-striped table-bordered">
+			    <tr><td>{{=form.custom.label.dental_work_date}}:</td>
+				<td>{{=form.custom.widget.dental_work_date}}</td></tr>
+			    <tr><td>{{=form.custom.label.charge}}:</td>
+				<td>{{=form.custom.widget.charge}}</td></tr>
+			    <tr><td>{{=form.custom.label.material}}:</td>
+				<td>{{=form.custom.widget.material}}</td></tr>
+			    <tr><td>{{=form.custom.label.dental_lab}}:</td>
+				<td>{{=form.custom.widget.dental_lab}}</td></tr>
+			</table>
+		    </div>
+		</div>
+	    </div> <!-- end modal body -->
+	    <div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">{{=T('Cancel')}}</button>
+		<button class="btn btn-primary save_button" data-dismiss="modal" aria-hidden="true">{{=T('OK')}}</button>
+	    </div>
+	    {{=form.custom.end}}    
+	</div>   <!-- end modal -->
+	{{pass}}   
+    </ul>
+</div>
+
+<script>
+    
+function select_dental_work(categ_id) {
+    var selector_form = '#select_dental_work_modal_' + categ_id;
+    jQuery(selector_form).find('select[name="d_works_field"]').val(jQuery(selector_form).find('select[name="d_works_field"] option:first').val());
+    jQuery(selector_form).find('input[name="charge"]').val(jQuery(selector_form).find('select[name="d_works_field"] :selected').attr('dw_price'));
+    jQuery(selector_form).modal();
+    };
+
+jQuery(document).ready(function(){
+    {{for id, price in prices.iteritems():}}
+        $('select[name="d_works_field"] option[value="{{=id}}"]').attr('dw_price', {{=price}});
+    {{pass}} 
+    jQuery('select[name="d_works_field"]').change(function() {
+        jQuery('input[name="charge"]').val(jQuery(this).find(':selected').attr('dw_price'));
+    });
+    jQuery('.save_button').click(function() {
+	$(this).closest('form').submit();
+    });
+    var selector_div;
+    var idw;
+    var dw_charge;
+    jQuery('.quick_save_hyperlink').click(function() {
+	selector_div = '#select_dental_work_modal_' + $(this).attr('id_categ'); 
+	idw = $(this).attr('id_work');
+	dw_charge = jQuery("select[name='d_works_field'] option[value='" + idw + "']").attr("dw_price"); //MERCY!!! option[value='" + idw + "']??? 
+	jQuery(selector_div).find('select[name="d_works_field"]').val(idw);
+        jQuery(selector_div).find('input[name="charge"]').val(dw_charge);
+	cur_form = jQuery(selector_div).find('form');
+	jQuery(cur_form).submit();
+    });
+});
+
+</script>

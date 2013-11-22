@@ -1,0 +1,100 @@
+{{=BEAUTIFY(request.vars)}}
+
+<div class="tabbable">
+    <ul class="nav nav-tabs" id="action_tabs">
+	    <li  class="active" ><a href="#tab0" data-toggle="tab" id="1">Dental Record</a></li>
+	    <li><a href="#tab1" data-toggle="tab" id="2">Current Therapy Plan</a></li>
+	    <li><a href="#tab2" data-toggle="tab" id="3">Initial Condition</a></li>
+    </ul>
+    <div class="row-fluid">
+	    <div id="dental_div" style="position: relative;height: 320px;">
+	        <canvas id="dentogram" width="623" height="297" style="border:5px solid #d3d3d3; position: absolute; left: 0; top: 0; z-index: 0;">Your browser does not support the HTML5 canvas tag.</canvas>
+	        {{=form}}
+	    </div>
+    </div>
+	<div class="tab-content">
+	    <div class="tab-pane active" id="tab0">
+	    </div>
+	    <div class="tab-pane" id="tab1">
+	    </div>
+	    <div class="tab-pane" id="tab2">
+	    </div>    
+	</div>
+</div>
+
+<script>    
+    
+    {{if request.vars.ins_action:}}
+        jQuery('#action_tabs li:eq({{=request.vars.ins_action[3:]}}) a').tab('show');
+	show_diagram({{=int(request.vars.ins_action[3:])+1}});
+    {{else:}}
+        show_diagram(1);
+    {{pass}}
+    jQuery("#dental_div").click(function(e){
+	var x = e.pageX - this.offsetLeft-5;
+	var y = e.pageY - this.offsetTop-5;
+	jQuery('input[name="x_value"]').attr("value", x)
+	jQuery('input[name="y_value"]').attr("value", y)
+	//jQuery('input[name="ins_action"]').attr("value", jQuery('div.active').attr('id'))
+	jQuery('#x_y_vals').submit();
+    });
+    jQuery('a[data-toggle="tab"]').on('show', function (e) {
+        show_diagram(e.target.id);
+    });    
+    function show_diagram(d_type) {
+	jQuery('canvas').not('#dentogram').remove();
+	var c = document.getElementById("dentogram");
+	var ctx = c.getContext("2d");
+	var chart = document.createElement("img");
+	chart.onload = function(){
+	    ctx.drawImage(chart,0,0);
+	    if (d_type == 1) {
+		{{for (i, dental_work) in enumerate(dental_works1):}}
+		var dental_work_canvas{{=i}} = document.createElement("canvas");
+	        dental_work_canvas{{=i}}.width = 623;
+	        dental_work_canvas{{=i}}.height = 297;
+	        dental_work_canvas{{=i}}.setAttribute("style", "border:5px solid #d3d3d3; position: absolute; left: 0; top: 0; z-index: {{=i+1}};");
+	        document.getElementById("dental_div").appendChild(dental_work_canvas{{=i}});
+	        var ctx_dental_work{{=i}} = dental_work_canvas{{=i}}.getContext("2d");
+	        var dent_works_img{{=i}} = document.createElement("img");
+	        dent_works_img{{=i}}.onload = function(){   
+		    ctx_dental_work{{=i}}.drawImage(dent_works_img{{=i}}, {{=dental_work["s_x"]}}, {{=dental_work["s_y"]}}, {{=dental_work["s_w"]}}, {{=dental_work["s_h"]}}, {{=dental_work["d_x"]}},{{=dental_work["d_y"]}}, {{=dental_work["d_w"]}}, {{=dental_work["d_h"]}});   
+		};
+	        dent_works_img{{=i}}.src = '{{=dental_work["img_src"]}}';    
+	        {{pass}}
+	    }
+	    else if (d_type == 2) {
+		{{for (i, dental_work) in enumerate(dental_works2):}}
+		var dental_work_canvas{{=i}} = document.createElement("canvas");
+		dental_work_canvas{{=i}}.width = 623;
+		dental_work_canvas{{=i}}.height = 297;
+		dental_work_canvas{{=i}}.setAttribute("style", "border:5px solid #d3d3d3; position: absolute; left: 0; top: 0; z-index: {{=i+1}};");
+		document.getElementById("dental_div").appendChild(dental_work_canvas{{=i}});
+		var ctx_dental_work{{=i}} = dental_work_canvas{{=i}}.getContext("2d");
+		var dent_works_img{{=i}} = document.createElement("img");
+		dent_works_img{{=i}}.onload = function(){   
+		     ctx_dental_work{{=i}}.drawImage(dent_works_img{{=i}}, {{=dental_work["s_x"]}}, {{=dental_work["s_y"]}}, {{=dental_work["s_w"]}}, {{=dental_work["s_h"]}}, {{=dental_work["d_x"]}},{{=dental_work["d_y"]}}, {{=dental_work["d_w"]}}, {{=dental_work["d_h"]}});   
+		};
+		dent_works_img{{=i}}.src = '{{=dental_work["img_src"]}}';    
+	        {{pass}}
+	    }
+	    else if (d_type == 3) {
+		{{for (i, dental_work) in enumerate(dental_works3):}}
+		var dental_work_canvas{{=i}} = document.createElement("canvas");
+		dental_work_canvas{{=i}}.width = 623;
+		dental_work_canvas{{=i}}.height = 297;
+		dental_work_canvas{{=i}}.setAttribute("style", "border:5px solid #d3d3d3; position: absolute; left: 0; top: 0; z-index: {{=i+1}};");
+		document.getElementById("dental_div").appendChild(dental_work_canvas{{=i}});
+		var ctx_dental_work{{=i}} = dental_work_canvas{{=i}}.getContext("2d");
+		var dent_works_img{{=i}} = document.createElement("img");
+		dent_works_img{{=i}}.onload = function(){   
+		    ctx_dental_work{{=i}}.drawImage(dent_works_img{{=i}}, {{=dental_work["s_x"]}}, {{=dental_work["s_y"]}}, {{=dental_work["s_w"]}}, {{=dental_work["s_h"]}}, {{=dental_work["d_x"]}},{{=dental_work["d_y"]}}, {{=dental_work["d_w"]}}, {{=dental_work["d_h"]}});   
+		};
+		dent_works_img{{=i}}.src = '{{=dental_work["img_src"]}}';    
+	        {{pass}}
+	    };	
+	};
+	chart.src = '{{=URL("static","images/dentworks/DONTIA.png")}}';
+    }  
+     //jQuery('#dentogram').width(800)
+</script>

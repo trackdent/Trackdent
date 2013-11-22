@@ -1,0 +1,85 @@
+{{response.files.append(URL(r=request,c='static',f='css/demo_page.css'))}}
+{{response.files.append(URL(r=request,c='static',f='css/demo_table_jui.css'))}}
+{{response.files.append(URL(r=request,c='static',f='js/jquery.dataTables.js'))}}
+
+{{extend 'layout.html'}}
+<script>
+    jQuery(document).ready(function(){
+        jQuery('#info9').addClass('active');
+        jQuery('#images tr td, th').disableSelection();
+        jQuery.extend( $.fn.dataTable.defaults, {
+	    "bSortClasses": false,
+            "bFilter": false,
+            "bInfo": false,
+            "sScrollY": "420px",
+            "bPaginate": false,
+            "bScrollCollapse": false
+        });
+        $('#images').dataTable();
+        {{if request.args(1)<>'new':}}
+        var cur_rec_name;
+	var cur_rec_id;
+        var checked_box;
+        var image_url;
+        jQuery('.master tr').click(function(e){
+            if ($(this).hasClass('row_selected')) {
+                $(this).css("background","");
+                $(this).removeClass('row_selected');
+                image_url = "{{=URL("images_details.load")}}" + "/" + {{=request.args(0)}};
+                }
+            else {
+                jQuery('tr.row_selected').css("background","");
+                jQuery('tr.row_selected').removeClass('row_selected');
+                $(this).addClass('row_selected'); 
+                checked_box = jQuery('input', this);
+                cur_rec_name = jQuery(checked_box).attr('name');
+                cur_rec_id = cur_rec_name.slice(9);
+                image_url = "{{=URL("images_details.load")}}" + "/" + {{=request.args(0)}} + "/" + cur_rec_id; 
+                };
+            web2py_component(image_url, 'image_details_component');
+	});     
+	    {{if request.args(1):}}
+	    var input_name;
+            input_name = 'image_id_' + '{{=request.args(1)}}';
+            jQuery('input[name='+input_name+']').closest('tr').addClass('row_selected');
+	    {{pass}}
+        {{pass}} 
+	jQuery('button[type="reset"]').click(function(){
+	    window.location.href = "{{=URL("images", args=[request.args(0)])}}";
+	});
+        jQuery('#new_image').change(function() {
+            $("#imgloader").show();
+            jQuery('#file_form').submit();
+        });
+    });
+</script> 
+
+{{include 'default/patient_name_bar.html'}}
+{{include 'default/main_patient_menu.html'}}
+
+<div class="span10 lightcolor2 well sunken" > 
+    <div class="row-fluid">    
+        <div class='span5'>
+            <div class='row-fluid'>
+                <div class='btn-toolbar' style="margin-top:13px;">
+                    <i class="icon-plus"></i>{{=T('Add Images')}}:
+                    <div class='btn-group'>
+                        <form id='file_form' enctype="multipart/form-data" method="post">
+                            <input class='upload' name="img_files" id='new_image' type='file' multiple>
+                        </form>                     
+                    </div>
+                </div>
+            </div>
+            <hr style='color: #5C6779;background-color: #5C6779;height:3px;margin-top:0px;'>
+            <div class='row-fluid'>
+            {{=table1}}
+            </div>
+        </div>     
+        <div class="lightcolor1 well span7">
+	    {{=LOAD('default', 'images_details.load', args = [request.args(0), request.args(1)], ajax=False, ajax_trap=True, target="image_details_component")}}
+        </div>
+    </div>
+</div>
+
+<div style="display:none;position:absolute;top: 50%;left: 50%;" id="imgloader"><img src="{{=URL("static",'images/ajax-loader(2).gif')}}">
+</div>

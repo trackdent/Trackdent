@@ -1,0 +1,98 @@
+{{extend 'layout.html'}}
+    
+<div class="row-fluid"><!-- row start-->
+    <h5>{{=T('Patients')}}</h5>
+</div>
+<div class="row-fluid"><!-- row start-->
+    <h6><small>{{=T('Name')}}: {{=patient_name}}</small></h6>  
+</div>
+{{=session.dental_work}}
+{{=session.dental_work_date}}
+<div class="row-fluid">
+    <div class="span2">     
+        <div class="btn-toolbar well well-small">    
+            <ul class="nav nav-list">
+                {{for categ, form in insert_forms.iteritems():}}
+                <li>
+                    <div class="btn-group">
+                        <button class="btn btn-large" style="width:80px;height:60px;" onclick="select_dental_work({{=categ}})"><b>{{=categ_names[categ]}}</b></button>
+                        <button class="btn btn-large dropdown-toggle" data-toggle="dropdown" style="height:60px;"><span class="caret"></span></button>
+                        <ul class="dropdown-menu">
+                                <!-- dropdown menu links -->
+                             <!--   {{#for d_work in db(db.dental_works.category==categ.id).select():}}
+                                <a>{{#=d_work.name}}</a>
+                                {{#pass}}	-->
+                        </ul>
+                    </div>
+                </li>
+                <div id="select_dental_work_modal_{{=categ}}" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h3 id="myModalLabel">{{=T('Dental Work Selection')}}</h3>
+                    </div>
+                        {{=form.custom.begin}} 
+                    <div class="modal-body">
+                        <div class="row-fluid">
+                            <div class="span6">
+                                {{=form.custom.widget.d_works_field}}
+                            </div>
+                            <div class="span6">
+                                <table class="table table-condensed table-striped table-bordered">
+                                    <tr><td>{{=form.custom.label.dental_work_date}}:</td>
+                                        <td>{{=form.custom.widget.dental_work_date}}</td></tr>
+                                    <tr><td>{{=form.custom.label.charge}}:</td>
+                                        <td>{{=form.custom.widget.charge}}</td></tr>
+                                    <tr><td>{{=form.custom.label.material}}:</td>
+                                        <td>{{=form.custom.widget.material}}</td></tr>
+                                    <tr><td>{{=form.custom.label.dental_lab}}:</td>
+                                        <td>{{=form.custom.widget.dental_lab}}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div> <!-- end modal body -->
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">{{=T('Cancel')}}</button>
+                        <button class="btn btn-primary" type="submit">OK</button>
+                    </div>
+                        {{=form.custom.end}} 
+                </div>   <!-- end modal -->
+                {{pass}}   
+            </ul>
+        </div>     
+    </div>    
+
+    <div class="span8">
+        <div class="row-fluid">
+            {{if request.vars.ins_action:}}
+                {{=LOAD('default','diagram_insert.load', args=[request.args(0)], vars=dict(ins_action=request.vars.ins_action), ajax=True)}}
+            {{else:}}
+                {{=LOAD('default','diagram_insert.load', args=[request.args(0)], ajax=True)}}
+            {{pass}}
+        </div>    
+        <div class="row-fluid">
+            <a class="btn btn-large" style="width:80px;height:30px;" href="{{=URL('dental_record', args=[request.args(0)], user_signature=True)}}"><b>Details</b></a>
+        </div>  
+    </div>
+
+{{include 'default/right_menu.html'}}
+</div>
+<script>
+
+function select_dental_work(categ_id) {
+    var selector_form = '#select_dental_work_modal_' + categ_id;
+    jQuery(selector_form).find('select[name="d_works_field"]').val(jQuery(selector_form).find('select[name="d_works_field"] option:first').val());
+    jQuery(selector_form).find('input[name="charge"]').val(jQuery(selector_form).find('select[name="d_works_field"] :selected').attr('dw_price'));
+    jQuery(selector_form).modal();
+};
+
+jQuery(document).ready(function(){
+    jQuery('#info6').addClass('active');
+    {{for id, price in prices.iteritems():}}
+        $('select[name="d_works_field"] option[value="{{=id}}"]').attr('dw_price', {{=price}});
+    {{pass}}   
+});
+
+jQuery('select[name="d_works_field"]').change(function() {
+    j++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Query('input[name="charge"]').val(jQuery(this).find(':selected').attr('dw_price'));        
+});
+</script>

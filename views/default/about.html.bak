@@ -1,0 +1,53 @@
+{{extend 'layout.html'}}
+{{include 'default/main_patient_menu.html'}}
+<div class="span8 well sunken" style="background-image: url( '{{=URL("static","images/ricepaper.png")}}');">
+    <div class="row-fluid">    
+        <div class='span4'>
+            <a class="brand" href="{{=URL('index')}}"><span style='color:red;font-style:italic;font-size:xx-large;'>Track</span><span style='color:blue;font-size:xx-large;'>DENT</span></a>
+        </div>
+        <div class='span8'>
+            <span style='color:grey;font-size:x-large;'>TrackDent</span>
+            <br>1.0
+            <br>
+            {{=license}}
+        </div>
+    </div>
+</div>
+
+<div class="offset2 span8 lightcolor2 well sunken" >
+    <div class="row-fluid">    
+        <div class='span4'>
+            <a class="brand" href="{{=URL('index')}}"><span style='color:red;font-style:italic;font-size:xx-large;'>Track</span><span style='color:blue;font-size:xx-large;'>DENT</span></a>
+        </div>
+        <div class='span8'>
+            <span style='color:grey;font-size:x-large;'>TrackDent</span>
+            <br>1.0
+            <br>
+            <br><span font-size:large;'>{{=T('Author: Dimitris Trifonopoulos')}}</span>
+            <br>
+            <br>{{=T('This software is a volunteer effort hoping to help dentists to run their offices in a more organized way.')}}
+            <br>{{=T('The author will be happy to hear this target has been accomplished, even partially.')}}
+            <br>{{=T('For this, as well as any suggestion you may have, you can contact the author in this email address:')}}
+            <br>
+            <br>{{=T('dimtrif@gmail.com')}}
+            <br>
+            <hr style='color: #5C6779;background-color: #5C6779;height:3px;'>
+            <br>
+            <br> Copyright (C) 2013  Dimitris Trifonopoulos
+            <br>
+            <br>This program is free software; you can redistribute it and or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+<br>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+<br>You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.  
+        </div>
+    </div>
+</div>

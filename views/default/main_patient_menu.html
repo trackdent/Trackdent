@@ -1,0 +1,15 @@
+<div class="span2 fill-v" style="background-color: #EDEDEB;">
+        <ul class="nav nav-list" id="mytabs">
+            <li id="info0"><a href="{{=URL('patient_update', args=[request.args(0), 'new'])}}" class='btn-green rounded'><span><i class='icon-user icon-white'></i>{{=T("  New Patient")}}</span></a></li>
+            <hr style='color: #5C6779;background-color: #5C6779;height:3px;'>
+            <li id="info1"><a href="{{=URL('patient_update', args=[request.args(0)], user_signature=True)}}">{{=T("General")}}</a></li>
+            <li id="info2"><a href="{{=URL('diagram', args=[request.args(0)], user_signature=True)}}">{{=T("Diagram")}}</a></li>
+            <li id="info3"><a href="{{=URL('dental_record', args=[request.args(0)], user_signature=True)}}">{{=T("Dental Record")}}</a></li>
+            <li id="info10"><a href="{{=URL('payments', args=[request.args(0)], user_signature=True)}}">{{=T("Payments")}}</a></li> 
+            <li id="info7"><a href="{{=URL('endo', args=[request.args(0)], user_signature=True)}}">{{=T("Endodontics")}}</a></li>
+            <li id="info8"><a href="{{=URL('color', args=[request.args(0)], user_signature=True)}}">{{=T("Colors")}}</a></li>
+            <li id="info4"><a href="{{=URL('appointments', args=[request.args(0)], user_signature=True)}}">{{=T("Appointments")}}</a></li>
+            <li id="info9"><a href="{{=URL('images', args=[request.args(0)], user_signature=True)}}">{{=T("Images")}}</a></li>
+        </ul>
+</div>
+

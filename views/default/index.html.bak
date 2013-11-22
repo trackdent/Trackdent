@@ -1,0 +1,37 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+   <!-- <div class="navbar">
+    <div class="navbar-inner">
+    <form class="navbar-search form-search pull-left">
+    <input type="text" class="search-query" placeholder="Search" name="lastname">
+    </form>
+    <ul class="nav nav-pills">
+        <li><a href="{{=add_patient_link}}"><i class="icon-plus-sign icon-white"></i></a></li>
+        <li><a href="#">Recent</a></li>
+    </ul>
+    </div>
+    </div> -->
+<div class="container">
+    <a href="{{=add_patient_link}}" class="btn btn-large"><i class="icon-plus-sign"></i><i class="icon-user"></i></a>
+
+{{=form}}
+
+{{block right_sidebar}}
+{{=A(T("Administrative Interface"), _href=URL('admin','default','index'), _class='btn',
+     _style='margin-top: 1em;')}}
+<h6>{{=T("Don't know what to do?")}}</h6>
+<ul>
+  <li>{{=A(T("Online examples"), _href=URL('examples','default','index'))}}</li>
+  <li><a href="http://web2py.com">web2py.com</a></li>
+  <li><a href="http://web2py.com/book">{{=T('Documentation')}}</a></li>
+</ul>
+{{end}}
+</div>
+<script>
+jQuery(document).ready(function(){
+jQuery('TD').click(function(){
+    var currentId_update_link = 'patient_update/' + $(this).parent().attr('id');
+    window.location.href = currentId_update_link;
+});
+});
+</script>
