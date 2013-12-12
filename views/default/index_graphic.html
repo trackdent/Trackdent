@@ -1,0 +1,37 @@
+{{extend 'layout.html'}}
+
+<div class="row-fluid"><!-- row start-->
+    <div class="span11 lightcolor2 well well-large sunken">
+        <div class="row-fluid"><!-- row start-->
+            <h4 style='text-decoration:underline;'>{{=table_title}}</h4>
+        </div>
+        <div class="row-fluid"><!-- row start-->
+            {{=grid}}
+        </div>
+    </div>
+</div>
+<div class="row-fluid"><!-- row start-->
+    <div class="span11 lightcolor2 well well-large sunken">
+        <div class="row-fluid"><!-- row start-->
+            <h4 style='text-decoration:underline;'>{{=T('Help for Graphics for Dental Works')}}</h4>
+        </div>
+        <div class="row-fluid"><!-- row start-->
+            {{=MARKMIN(T(' \
+            ------- \n \
+            Here you can add your own graphics for  use in your dental works. \n\
+            ------- \n \
+            ------- \n \
+            Dimensions should be WIDTH 623 pixels  X HEIGHT 297 pixels \n \
+            ------- \n \
+            ------- \n \
+            Recommended type of image file is PNG. \n \
+            ------- \n \
+            ------- \n \
+            You can look for images DONTIA.png and NEOGILA.png and use them as a \
+            guide for teeth positions, for designing your own graphics. \n \
+            The former is for permanent and the latter for deciduous teeth. \n \
+            You can find them in the folder static/images/dentworks/. \
+            '))}}
+        </div>
+    </div>
+</div>

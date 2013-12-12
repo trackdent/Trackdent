@@ -109,11 +109,11 @@
                 });
                 jQuery('form').submit(function() {
                     jQuery('input[name="ap_start"]').removeAttr('disabled');
-                    jQuery('input[name="ap_start"]').attr("value", $.fullCalendar.formatDate( date, 'yyyy-MM-dd HH:mm:ss' ));
+                    jQuery('input[name="ap_start"]').attr("value", $.fullCalendar.formatDate( date, "{{=T('yyyy-MM-dd HH:mm:ss')}}" ));
                     var dur = parseInt(jQuery('#myModal .active').attr('id'));
                     var app_end = new Date(date.getTime() + dur*60000);
                     jQuery('input[name="ap_end"]').removeAttr('disabled');
-                    jQuery('input[name="ap_end"]').attr("value", $.fullCalendar.formatDate( app_end, 'yyyy-MM-dd HH:mm:ss' ));
+                    jQuery('input[name="ap_end"]').attr("value", $.fullCalendar.formatDate( app_end, "{{=T('yyyy-MM-dd HH:mm:ss')}}" ));
                     ins_url = "{{=URL('create_appointment')}}";
                     ajax(ins_url, ['title', 'ap_start', 'ap_end', 'notes', 'patient'], ':eval');
                     $('#myModal').modal('hide');

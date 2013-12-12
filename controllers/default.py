@@ -14,7 +14,10 @@ import teethchart_functions
 from gluon.fileutils import read_file
 
 def index():
-    db.appointments.truncate()
+    if len(db().select(db.patients.ALL))<1:
+        db.patients.insert(lastname=T('Patient'), firstname=T('Default'), notes=T('Default patient'))
+    if not session.current_id:
+            session.current_id = db(db.patients.id>0).select(orderby=~db.patients.id).first().id
     if request.vars.lastname:
         search_str=request.vars.lastname.capitalize()
         pattern = request.vars.lastname.capitalize() + '%'
@@ -315,7 +318,7 @@ def images():
     query1 = (db.images.patient == request.args(0))
     rows1 = db(query1).select(db.images.ALL, orderby=~db.images.date)
     if not rows1:
-        table1 = TABLE(THEAD(TR( TH(T('DATE')), TH('FILE'), TH('PREVIEW') )), TBODY(), _id='images', _class='master pretty2 table-condensed')
+        table1 = TABLE(THEAD(TR( TH(T('DATE')), TH(T('FILE')), TH(T('PREVIEW')) )), TBODY(), _id='images', _class='master pretty2 table-condensed')
     else:    
         extracolumns1 = [{'label':T('PREVIEW') , 'selected': False, 'class':'', 'width':'', 'content':lambda row,rc: SPAN(IMG(_src=URL('download', args=row.img_file), _height="60px"))}, {'label':'' , 'selected': False, 'class':'', 'width':'', 'content':lambda row,rc: SPAN(INPUT(_type='checkbox', _style="visibility: hidden;", _name='image_id_' + str(row.id)))} ]
         table1 = SQLTABLE(rows1, _id="images", _class='master pretty2 table-condensed',  headers='labels', columns=["images.date", "images.notes", "images.img_file" ], extracolumns=extracolumns1, upload=URL('download'))        
@@ -717,6 +720,137 @@ def appointments():
         table2 = SQLTABLE(rows2, _id="table_d_works", _class='master pretty2 table-condensed',  headers='labels', columns=["dental_record.dental_work_date", "dental_record.dental_work", "dental_record.charge" ])
     patient_name = '%(lastname)s %(firstname)s' %dict(lastname = db.patients[request.args(0)].lastname, firstname = db.patients[request.args(0)].firstname)
     return dict(table1=table1, table2=table2, patient_name=patient_name)
+
+def danger_zone():
+    return locals()
+
+def reset_database():
+    db.endo.truncate()
+    db.colors.truncate()
+    db.payments.truncate()
+    db(db.images.id>0).delete()
+    db.images.truncate()
+    db.dental_work_materials.truncate()
+    db.pre_existing_dental_works.truncate()
+    db.therapy_plan_works.truncate()
+    db.therapy_plan.truncate()
+    db.dental_record.truncate()
+    db.contacts.truncate()
+    db.dental_labs.truncate()
+    db.dental_labs.insert(lastname=T('LAB'), firstname='1')
+    db.dental_labs.insert(lastname=T('LAB'), firstname='2')
+    db.dental_work_materials.insert(name='Composite 1')
+    db.dental_work_materials.insert(name='Composite 2')
+    db.patients.truncate()
+    db.appointments.truncate()
+    db.medical_conditions.truncate()
+    db.patients.insert(lastname=T('Patient'), firstname=T('Default'), notes=T('Default patient'))
+    session.current_id = db(db.patients.id>0).select(orderby=~db.patients.id).first().id
+    for i in (T('Hepatitis'), T('AIDS'), T('Heart'), T('Antimicrobial prophylaxis'), T('Diabetes')):
+        db.medical_conditions.insert(name=i)
+    db.dental_works.truncate()
+    db.dental_work_categories.truncate()
+    for i in ( T('DIRECT RESTOR.'), T('ENDO'), T('PERIO'), T('FIXED PROSTH.'), T('DENTURES'), T('SURGICAL'), T('DIAGNOSTICS') ):
+        db.dental_work_categories.insert(name=i)
+    db(db.dental_work_graphics.id>0).delete()
+    db.dental_work_graphics.truncate()
+    import os
+    filenames = ('MASIT_1.png', 'MASIT_2.png', 'MASIT_3.png', 'EGGYS_1.png', 'EGGYS_2.png', 'EGGYS_3.png', 'APO_1.png', 'APO_2.png', 'APO_3.png', 'ANASYST_APO_1.png', 'ANASYST_APO_2.png','ANASYST_APO_3.png', 'ANASYST_EGG_1.png', 'ANASYST_EGG_2.png','ANASYST_EGG_3.png', 'APO_MAS_1.png', 'APO_MAS_2.png','APO_MAS_3.png', 'AYXEN_1.png', 'AYXEN_2.png','AYXEN_3.png','AYXEN_4.png','AYXEN_5.png','AYXEN_6.png', 'AYXEN_7.png', 'DONTIA_MERIKIS.png', 'EGG_AP_MAS_1.png', 'EGG_AP_MAS_2.png','EGG_AP_MAS_3.png', 'EGGYS_MAS_1.png', 'EGGYS_MAS_2.png', 'EGGYS_MAS_3.png', 'EKSAGOGES_FINAL.png', 'ENDO.png', 'KATHAR.png', 'ODONTOSTOIXIES.png', 'PROKAT_AXONES.png', 'STEFANES2.png', 'XYTOI_AXONES.png')
+    titles = ( T('OCCL. BLUE 1'), T('OCCL. YELLOW'),T('OCCL. BLUE 2'), T('MESIAL BLUE 1'), T('MESIAL YELLOW '), T('MESIAL BLUE 2'), T('DISTAL BLUE 1'), T('DISTAL YELLOW'), T('DISTAL BLUE 2'), T('BIG DISTAL BLUE 1'), T('BIG DISTAL YELLOW'), T('BIG DISTAL BLUE 2'), T('BIG MESIAL BLUE'), T('BIG MESIAL YELLOW'), T('BIG MESIAL RED'), T('DISTAL OCCL. BLUE 1'),  T('DISTAL OCCL. YELLOW'), T('DISTAL OCCL. BLUE 2'),  T('CERVICAL BLUE 1'), T('CERVICAL YELLOW'),T('CERVICAL BLUE 2'), T('CERVICAL GREEN'), T('CERVICAL PINK'), T('CERVICAL RED 1'), T('CERVICAL RED 2'), T('DENTURE TEETH'), T('MES-DIST-OCCL BLUE 1'), T('MES-DIST-OCCL YELLOW'), T('MES-DIST-OCCL BLUE 2'), T('MESIAL OCCL. BLUE 1'), T('MESIAL OCCL. YELLOW'), T('MESIAL OCCL. BLUE 2'), T('EXTRACTION'), T('ENDO'), T('PERIO'), T('DENTURE'), T('PREFABRICATED POST'), T('CROWN'), T('CAST POST') )
+    for i,x  in zip(filenames, titles):
+        pathfilename=os.path.join(request.folder, 'static', 'images', 'dentworks_old', i )
+        stream = open(pathfilename, 'rb')
+        db.dental_work_graphics.insert(title = x, file = stream)
+    db.separation.truncate()
+    for i in (T('TOOTH'), T('JAW'), T('MOUTH QUARTER'), T('FRONT-BACK LEFT-BACK RIGHT'), T('FULL MOUTH')):
+        db.separation.insert(separation_name=i)
+    db.dental_works.insert(name=T('OCCLUSAL FILLING'), category='1', graphic='1', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('MESIAL OCCL.FILLING'), category='1', graphic='30', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('DISTAL OCCL.FILLING'), category='1', graphic='16', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('MESIAL FILLING'), category='1', graphic='4', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('DISTAL FILLING'), category='1', graphic='7', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('LARGE MESIAL FILLING'), category='1', graphic='13', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('LARGE DISTAL FILLING'), category='1', graphic='10', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('MES-OCCL-DIST FILLING'), category='1', graphic='27', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('CERVICAL FILLING'), category='1', graphic='19', graphic_category='4', separation='1', price=60 )
+    db.dental_works.insert(name=T('ROOT CANAL ANTERIOR'), category='2', graphic='34', graphic_category='4', separation='1', price=100 )
+    db.dental_works.insert(name=T('ROOT CANAL POSTERIOR'), category='2', graphic='34', graphic_category='4', separation='1', price=150 )
+    db.dental_works.insert(name=T('CLEANING'), category='3', graphic='35', graphic_category='5', separation='5', price=50 )
+    db.dental_works.insert(name=T('GINGIVITIS THERAPY'), category='3', graphic='35', graphic_category='5', separation='5', price=150 )
+    db.dental_works.insert(name=T('PERIODONTITIS THERAPY'), category='3', graphic='35', graphic_category='5', separation='5', price=1000 )
+    db.dental_works.insert(name=T('PORCELAIN-FUSED-TO-METAL CROWN'), category='4', graphic='38', graphic_category='4', separation='1', price=300 )
+    db.dental_works.insert(name=T('ALL CERAMIC CROWN'), category='4', graphic='38', graphic_category='4', separation='1', price=400 )
+    db.dental_works.insert(name=T('DENTURE'), category='5', graphic='36', graphic_category='1', separation='2', price=600 )
+    db.dental_works.insert(name=T('PARTIAL DENTURE'), category='5', separation='2', price=700)
+    db.dental_works.insert(name=T('PARTIAL DENTURE TOOTH'), category='5', graphic='26', graphic_category='3', separation='1', price=0 )
+    db.dental_works.insert(name=T('EXTRACTION SIMPLE'), category='6', graphic='33', graphic_category='2', separation='1', price=60 )
+    db.dental_works.insert(name=T('EXTRACTION SURGICAL'), category='6', graphic='33', graphic_category='2', separation='1', price=250 )
+    db.dental_works.insert(name=T('X-RAY'), category='7', price=20 )
+    db.dental_works.insert(name=T('EXAMINATION-DIAGNOSIS'), category='7', price=40 )
+    db.teeth.truncate()
+    pathfilename = os.path.join(request.folder, 'db_teeth_original.csv' )
+    db.teeth.import_from_csv_file(open(pathfilename, 'r'))
+    db.teeth.insert(tooth=T('UPPER JAW'), upper=True, permanent=True, separation='2', x1=0, y1=0, x2=622, y2=148, horizontal_offset_for_source=0)
+    db.teeth.insert(tooth=T('LOWER JAW'), upper=False, permanent=True, separation='2', x1=0, y1=149, x2=622, y2=296, horizontal_offset_for_source=0)
+    db.teeth.insert(tooth=T('FULL MOUTH'), upper=False, permanent=True, separation='5', x1=0, y1=0, x2=622, y2=296, horizontal_offset_for_source=0)
+    redirect(URL('danger_zone'))
+
+def reset_patients_appointments():
+    db.endo.truncate()
+    db.colors.truncate()
+    db.payments.truncate()
+    db(db.images.id>0).delete()
+    db.images.truncate()
+    db.pre_existing_dental_works.truncate()
+    db.dental_record.truncate()
+    db.therapy_plan_works.truncate()
+    db.therapy_plan.truncate()
+    db.contacts.truncate()
+    db.dental_labs.truncate()
+    db.dental_labs.insert(lastname=T('LAB'), firstname='1')
+    db.dental_labs.insert(lastname=T('LAB'), firstname='2')
+    db.patients.truncate()
+    db.patients.insert(lastname=T('Patient'), firstname=T('Default'), notes=T('Default patient'))
+    session.current_id = db(db.patients.id>0).select(orderby=~db.patients.id).first().id
+    db.appointments.truncate()
+    redirect(URL('danger_zone'))
+
+def backup():
+    import gluon.contenttype
+    import StringIO
+    s = StringIO.StringIO()
+    db.export_to_csv_file(s)
+    response.headers['Content-Type'] = gluon.contenttype.contenttype('.csv')
+    response.headers['Content-disposition'] = 'attachment; filename=backup_dental_db.csv'
+    return s.getvalue()
+
+def restore():
+    formcsv = FORM( INPUT(_type='submit',_value=T('RESTORE!!!'), _class="btn btn-red"),
+                    str(T('Select file for restore:'))+" ",   
+                    INPUT(_type='file',_name='csvfile', _style='width:260px;'),)
+    if formcsv.process().accepted:
+        try:
+            for table in db.tables: db[table].truncate()
+            db.import_from_csv_file(request.vars.csvfile.file)
+            response.flash = T('data uploaded')
+        except Exception, e:
+            response.flash = DIV(T('unable to parse csv file'),PRE(str(e)))
+    return dict(formcsv=formcsv)
+
+def index_dental_work():
+    table_title=T('Dental Works')
+    grid=SQLFORM.grid(db.dental_works, editable=True, deletable=True, create=True, details=True, user_signature=False)
+    return dict(grid=grid, table_title=table_title)
+
+def index_material():
+    table_title=T('Materials')
+    grid=SQLFORM.grid(db.dental_work_materials, editable=True, deletable=True, create=True, details=True, user_signature=False)
+    return dict(grid=grid, table_title=table_title)
+
+def index_graphic():
+    table_title=T('Graphics for Dental Works')
+    grid=SQLFORM.grid(db.dental_work_graphics, editable=True, deletable=True, create=True, details=True, user_signature=False)
+    return dict(grid=grid, table_title=table_title)
 
 def help():
     return locals()

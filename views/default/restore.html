@@ -1,0 +1,19 @@
+{{extend 'layout.html'}}
+<h2 style='color:green;'>RESTORE DATA</h2>
+
+<div class='row-fluid'>
+    <hr style='color: #5C6779;background-color: #5C6779;height:3px;'>
+</div>
+
+<div class='row-fluid'>
+    <div class="span12 lightcolor2 well well-large sunken">
+        <div class='row-fluid'>
+            <div class='span5'>
+            {{=formcsv}}
+            </div>
+            <div class='span7'>
+         {{=T('This option allows you to restore your data to a previous state from a file. WARNING!!! ALL YOUR CURRENT DATA WILL BE LOST!!!')}}
+            </div>
+        </div>
+    </div>
+</div>

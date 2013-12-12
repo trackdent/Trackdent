@@ -10,9 +10,8 @@ Author: Dimitris Trifonopoulos
 -----------------------------------------
 
 -------------------------------
-Developed with web2py.
-
-http://127.0.0.1:8000/Trackdent/static/images/Stickers7.png
+Developed with [[web2py http://www.web2py.com]].
+http://127.0.0.1:8000/init/static/images/Stickers7.png
 
 --------------------------------------------------
 
@@ -36,3 +35,18 @@ GNU General Public License για λεπτομέρειες.
 Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+
+---------------------------------
+
+**Συνεισφορές:**
+
+
+-----------------------------------------------------------------------------
+Eικονίδια: http://glyphicons.com/
+---------------------------------------------------------------
+-------------------------------------------------------------
+Datatables : http://datatables.net
+---------------------------------------------------------------
+---------------------------------------------------------------
+Full Calendar (jQuery plugin) του Adam Shaw: http://arshaw.com/fullcalendar/
+----------------------------------------------------------------------

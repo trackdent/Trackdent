@@ -32,10 +32,10 @@ if request.env.http_x_forwarded_for or request.is_https:
 elif (remote_addr not in hosts) and (remote_addr != "127.0.0.1"):
     raise HTTP(200, T('appadmin is disabled because insecure channel'))
 
-if (request.application=='admin' and not session.authorized) or \
-        (request.application!='admin' and not gluon.fileutils.check_credentials(request)):
-    redirect(URL('admin', 'default', 'index',
-                 vars=dict(send=URL(args=request.args,vars=request.vars))))
+#if (request.application=='admin' and not session.authorized) or \
+#        (request.application!='admin' and not gluon.fileutils.check_credentials(request)):
+#    redirect(URL('admin', 'default', 'index',
+#                 vars=dict(send=URL(args=request.args,vars=request.vars))))
 
 ignore_rw = True
 response.view = 'appadmin.html'

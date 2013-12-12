@@ -40,6 +40,9 @@
     {{pass}}
 </table>
   {{pass}}
+  <hr>
+  <a class="btn btn-red" href="{{=URL('default', 'danger_zone', user_signature=True)}}">{{=T('Danger Zone!!!')}}</a>
+  <hr>
 
 {{elif request.function=='select':}}
   <h2>{{=XML(str(T("Database %s select"))%A(request.args[0],_href=URL('index'))) }}

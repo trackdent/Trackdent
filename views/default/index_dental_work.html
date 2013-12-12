@@ -1,0 +1,66 @@
+{{extend 'layout.html'}}
+
+<div class="row-fluid"><!-- row start-->
+    <div class="span11 lightcolor2 well well-large sunken">
+        <div class="row-fluid"><!-- row start-->
+            <h4 style='text-decoration:underline;'>{{=table_title}}</h4>
+        </div>
+        <div class="row-fluid"><!-- row start-->
+            {{=grid}}
+        </div>
+    </div>
+</div>
+<div class="row-fluid"><!-- row start-->
+    <div class="span11 lightcolor2 well well-large sunken">
+        <div class="row-fluid"><!-- row start-->
+            <h4 style='text-decoration:underline;'>{{=T('Help for Dental Works Table')}}</h4>
+        </div>
+        <div class="row-fluid"><!-- row start-->
+            {{=MARKMIN(T(' \
+            **Category:** \n \
+            ------- \n \
+            Select in which button in dental diagram this Dental Work will appear for \
+            selection e.g. Diagnosis, Dentures etc. \n \
+            -------- \n \
+            **Graphic:** \n \
+            -------- \n \
+            Select how the dental work will appear in dental diagram. You must select \
+            one of the available graphics in the database in table dental_work_graphic. Of course \
+            you can add your own graphics in the database, they must be of certain specifications \
+            though. A Dental Work may have no graphic. \n \
+            -------- \n \
+            **Graphic Category:** \n \
+            ------- \n \
+            For full dentures, this should be 1. \n \
+            ------- \n \
+            ------- \n \
+            For extractions, this should be 2. \n \
+            ------- \n \
+            ------- \n \
+            For Dental Works that should appear on any tooth in diagram, even it is not present \
+            any more (e.g. a pontic of a bridge), this should be 3. \n \
+            ------- \n \
+            ------- \n \
+            For Dental Works that should appear only on present teeth, this should be 4. \n \
+            ------- \n \
+            ------- \n \
+            For Dental Works that should appear full mouth, this should be 5. \n \
+            ------- \n \
+            ------- \n \
+            This field has to do only about how the graphics appear and nothing more. \
+            If it is set wrong, the only bad thing that can happen is an abnormal dental diagram \
+            (e.g. teeth missing from a full denture when they shouldnt). It can be left empty. \n \
+            
+            -------- \n \
+            **Separation:** \n \
+            ------- \n \
+            Area of the mouth this Dental Work is about. Tooth, jaw, half jaw, full mouth etc. \n \
+            ------- \n \
+            ------- \n \
+            Seperations are ways to divide a mouth. These ways are set in the database in table separations. \
+            You can add your own in table separations before you can use them in dental works. \
+            Separation affects the way graphics are rendered on the diagram . \
+            '))}}
+        </div>
+    </div>
+</div>

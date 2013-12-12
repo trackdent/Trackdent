@@ -1,0 +1,40 @@
+{{extend 'layout.html'}}
+
+<h2 style='color:red;font-style:italic;'>{{=T('DANGER ZONE!')}}</h2>
+<h3 style='color:red;font-style:italic;'>{{=T('Caution!')}}</h3>
+<h4>{{=T('This page allows you to do dangerous actions, such as resetting your database and loosing all your patients data for ever.')}}</h4>
+<h4>{{=T('Proceed with caution.')}}</h4>
+
+<div class='row-fluid'>
+    <hr style='color: #5C6779;background-color: #5C6779;height:3px;'>
+</div>
+
+<div class='row-fluid'>
+    <div class="span10 lightcolor2 well well-large sunken">
+        <div class='row-fluid'>
+            <div class='span6'>
+                <a id='reset_data' class="btn btn-red" href="{{=URL('default', 'reset_patients_appointments', user_signature=True)}}">{{=T('DELETE ALL PATIENT DATA, LABS, CONTACTS, APPOINTMENTS!!!')}}</a>
+            </div>
+            <div class='span6'>
+         {{=T('This option will delete all patient data, contacts, dental labs and all appointments. POSSIBLE DENTAL WORKS, DENTAL WORKS CATEGORIES AND MEDICAL CONDITIONS WILL STAY AS IS. One necessary sample patient will be inserted.')}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class='row-fluid'>   
+    <div class="span10 lightcolor2 well well-large sunken"> 
+        <div class='row-fluid'>
+            <div class='span6'>
+                <a id='reset_data' class="btn btn-red" href="{{=URL('default', 'reset_database', user_signature=True)}}">{{=T('TOTALLY RESET DATABASE!!!')}}</a>
+            </div>
+            <div class='span6'>
+         {{=T('This option will delete all patient data, contacts, dental labs, all appointments, possible dental works, dental works categories and medical conditions. Some sample data will be inserted, resetting the database to its initial state.')}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class='row-fluid'>
+    <hr style='color: #5C6779;background-color: #5C6779;height:3px;'>
+</div>

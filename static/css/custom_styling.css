@@ -1,12 +1,15 @@
-.navbar-inner {
-background:  #e9e6e1 !important;
-}
-
 div.nav-collapse ul.nav li a, .brand {
   font-weight: bold !important;
   text-shadow: 0px -1px #ffffff !important;
   color:grey !important;
+}
 
+.navbar-inner {
+  background:  #e9e6e1 !important;
+}
+
+div.nav-collapse ul.nav li a:hover {
+  background:  #f7f4ee;
 }
 
 .ui-datepicker .ui-datepicker-prev, .ui-datepicker .ui-datepicker-next {

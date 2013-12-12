@@ -14,7 +14,7 @@ import datetime, os
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
-    db = DAL('sqlite://storage.sqlite')
+    db = DAL('sqlite://storage.sqlite' , adapter_args=dict(foreign_keys=False))
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db = DAL('google:datastore')
@@ -107,7 +107,6 @@ db.define_table('medical_conditions',
 ) 
 
 db.define_table('patients', 
-#   Field('lastname', label=T('Lastname'),requires=IS_UPPER(), represent=lambda value,row:A(value,_href=URL('patient_update',args=row.id)) ),
     Field('lastname', label=T('Lastname'),requires=IS_UPPER()),
     Field('firstname', label=T('Firstname'), requires=IS_UPPER()),
     Field('address', label=T('Address'),requires=IS_UPPER()),
@@ -182,7 +181,7 @@ db.define_table('dental_labs',
 
 db.define_table('dental_work_graphics', 
     Field('title', label=T('Title'), requires=IS_UPPER()),
-    Field('file', 'upload', uploadfolder=os.path.join(request.folder,'static','images', 'dentworks')),
+    Field('file', 'upload', uploadfolder=os.path.join(request.folder,'static','images', 'dentworks'), autodelete=True, required=True ),
     singular=T('Graphic'), plural=T('Graphics'),
     format='%(title)s'
 )
@@ -191,10 +190,10 @@ db.define_table('separation',
     #Type of mouth separation used by tooth(=mouth_area) table
     #and dental_works table, e.g.
     #1.Tooth
-    #2.Jaws
-    #3.Mouth Quarters
-    #4.Full Mouth
-    #5.Front, RearLeft,RearRight
+    #2.Jaw
+    #3.Mouth Quarter
+    #4.Front, RearLeft, RearRight
+    #5.Full Mouth
     #
     Field('separation_name', label=T('Type of Mouth Separation'), requires=IS_UPPER()),
     format='%(separation_name)s'
@@ -205,12 +204,12 @@ db.define_table('dental_works',
     #Category 1 Dental Works - full dentures
     #Category 2 Dental Works  - extractions
     #Category 3 Dental Works - works on any tooth
-    #Category 4 Dental Works - works on non-extracted teeth
+    #Category 4 Dental Works - works on non-extracted (present) teeth
     #FULL MOUTH - Category 5 Dental Works - works on the whole mouth
     Field('name', label=T('Name'), requires=IS_UPPER()),
     Field('category', db.dental_work_categories),
     Field('graphic', db.dental_work_graphics),
-    Field('graphic_category', 'integer', label=u'Κατηγορία Απεικόνισης', requires=IS_EMPTY_OR(IS_IN_SET((1,2,3,4,5)))),
+    Field('graphic_category', 'integer', requires=IS_EMPTY_OR(IS_IN_SET((1,2,3,4,5)))),
     Field('separation', db.separation),
     #Field('show_as_doable', 'boolean'), #0:not doable, 1:doable
     Field('price','decimal(7,2)', label=T('Price')),
@@ -219,6 +218,8 @@ db.define_table('dental_works',
 )
 
 db.dental_works.separation.requires=IS_IN_DB(db, 'separation.id', '%(separation_name)s', zero=None)
+db.dental_works.category.requires = IS_IN_DB(db, 'dental_work_categories.id', '%(name)s', zero=None)
+db.dental_works.graphic.requires = IS_IN_DB(db, 'dental_work_graphics.id', '%(title)s', zero=None)
 
 db.define_table('teeth', 
     Field('tooth', label=T('Tooth'), requires=IS_UPPER()),
@@ -234,6 +235,8 @@ db.define_table('teeth',
     #format='%(tooth)s'
     format=lambda r: DIV(r.tooth, _style='text-align:center;')
 )
+ 
+db.dental_works.separation.requires = IS_IN_DB(db, 'separation.id', '%(separation_name)s', zero=None) 
         
 db.define_table('pre_existing_dental_works',
     Field('patient', db.patients),
@@ -247,6 +250,8 @@ db.define_table('pre_existing_dental_works',
 db.pre_existing_dental_works.material.requires=IS_EMPTY_OR(IS_IN_DB(db, 'dental_work_materials.id', '%(name)s'))
 db.pre_existing_dental_works.dental_work.requires=IS_IN_DB(db, 'dental_works.id', '%(name)s', zero=None)
 db.pre_existing_dental_works.material.represent = lambda value, row: "" if not row.material else row.material.name
+db.pre_existing_dental_works.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
+
 
 db.define_table('dental_record',
     Field('patient', db.patients, ondelete='NO ACTION'), #
@@ -269,6 +274,8 @@ db.dental_record.material.represent = lambda value, row: "" if not row.material 
 db.dental_record.dental_lab.represent = lambda value, row: "" if not row.dental_lab else "%s %s" %(row.dental_lab.lastname, row.dental_lab.firstname)
 db.dental_record.dental_work_date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.dental_record.dental_work_date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
+db.dental_record.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
+db.dental_record.tooth.requires=IS_IN_DB(db, 'teeth.id', '%(tooth)s', zero=None)
 
 db.define_table('therapy_plan',
     Field('patient', db.patients, readable=False, writable=False, ondelete='NO ACTION'),
@@ -279,7 +286,7 @@ db.define_table('therapy_plan',
 )
 db.therapy_plan.tp_date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.therapy_plan.tp_date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
-
+db.therapy_plan.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
     
 db.define_table('therapy_plan_works',
     Field('tpw_date', 'date', label=T('DATE'), default=datetime.date.today()),
@@ -302,6 +309,8 @@ db.therapy_plan_works.material.represent = lambda value, row: "" if not row.mate
 db.therapy_plan_works.dental_lab.represent = lambda value, row: "" if not row.dental_lab else "%s %s" %(row.dental_lab.lastname, row.dental_lab.firstname)
 db.therapy_plan_works.tpw_date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.therapy_plan_works.tpw_date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
+db.therapy_plan_works.therapy_plan.requires=IS_IN_DB(db, 'therapy_plan.id', '%(tp_name)s', zero=None)
+db.therapy_plan_works.tooth.requires=IS_IN_DB(db, 'teeth.id', '%(tooth)s', zero=None)
 
 db.define_table('colors',
     Field('tooth', db.teeth, label=T('TOOTH')),
@@ -313,9 +322,10 @@ db.define_table('colors',
     Field('d_color', label=T('DISTAL'), requires=IS_UPPER()),
     singular=T('Color'), plural=T('Colors')
 )
-db.colors.tooth.requires=IS_IN_DB(db, 'teeth.id', '%(tooth)s')
+db.colors.tooth.requires=IS_IN_DB(db, 'teeth.id', '%(tooth)s', zero=None)
 db.colors.date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.colors.date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
+db.colors.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
 
 db.define_table('payments',
     Field('patient', db.patients, ondelete='NO ACTION', writable=False ),
@@ -328,12 +338,14 @@ db.define_table('payments',
 
 db.payments.date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.payments.date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
+db.payments.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
+db.payments.amount.requires=IS_INT_IN_RANGE(-1e100, 1e100)
 
 db.define_table('endo',
     Field('patient', db.patients, ondelete='NO ACTION', writable=False ),
     Field('date', 'date', label=T('DATE'), default=datetime.date.today()),
     Field('tooth', db.teeth, label=T('TOOTH')),
-    Field('notes', 'text', label=T('Notes'),requires=IS_UPPER()),
+    Field('notes', 'text', label=u'Σημειώσεις',requires=IS_UPPER()),
     Field('eplength',label=u'Μήκος Εγγύς Παρειακού', requires=IS_EMPTY_OR(IS_IN_SET(LENGTH_CHOICES))),
     Field('aplength',label=u'Μήκος Άπω Παρειακού', requires=IS_EMPTY_OR(IS_IN_SET(LENGTH_CHOICES))),
     Field('eglength',label=u'Μήκος Εγγύς Γλωσσικού', requires=IS_EMPTY_OR(IS_IN_SET(LENGTH_CHOICES))),
@@ -355,6 +367,8 @@ db.define_table('endo',
 db.endo.tooth.requires=IS_IN_DB(db, 'teeth.id', '%(tooth)s')
 db.endo.date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.endo.date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
+db.endo.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
+db.endo.tooth.requires=IS_IN_DB(db, 'teeth.id', '%(tooth)s', zero=None)
 
 db.define_table('contacts', 
     Field('lastname', label=u'Επώνυμο', requires=IS_UPPER()),
@@ -383,7 +397,8 @@ db.define_table('images',
  
 db.images.date.requires = IS_DATE(format=T('%Y-%m-%d'))
 db.images.date.represent = lambda value, row: value.strftime(T("%Y-%m-%d", lazy=False))
-    
+db.images.patient.requires=IS_IN_DB(db, 'patients.id', '%(lastname)s %(firstname)s', zero=None)
+
 db.define_table('appointments', 
     Field('ap_start', 'datetime', label=T('START')),
     Field('ap_end', 'datetime', label=T('END')),

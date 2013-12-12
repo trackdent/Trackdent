@@ -22,8 +22,8 @@ response.google_analytics_id = None
 #########################################################################
 
 response.menu = [
-    (CAT(I(_class="icon-time"), T('Calendar')), False, URL('default', 'calendar', args=session.current_id)),
-    (CAT(I(_class="icon-user"), T('Patients')), False, URL('default',"index", args=session.current_id)),
+    (CAT(I(_class="icon-time"), T('Calendar')), False, URL('default', 'calendar', args=session.current_id, user_signature=True)),
+    (CAT(I(_class="icon-user"), T('Patients')), False, URL('default', "index", args=session.current_id)),
     (CAT(I(_class="icon-book"), T('Contacts')), False, "", [
         (T('Labs'), False, URL('default', 'labs', args=session.current_id)),
         (T('Other Contacts'), False, URL('default', 'index', args=session.current_id, vars=dict(contacts=True)))
@@ -41,11 +41,16 @@ def _():
     # useful links to internal and external resources
     response.menu+=[
         (CAT(I(_class="icon-cog"), T('Administration')), False, '', [
-                (T('Database'), False, URL(app,'appadmin','index'))]
+            (T('Dental Works'), False, URL('default', 'index_dental_work')),
+            (T('Graphics for Dental Works'), False, URL('default','index_graphic')),
+            (T('Materials'), False, URL('default','index_material')),
+            (T('Database'), False, URL(app,'appadmin','index')),
+            (T('Back up'), False, URL('default', 'backup')),
+            (T('Restore'), False, URL('default', 'restore'))]
         ),
         (CAT( T('Help')), False, "", [
             ("", False, A(T('TrackDent Help'), _href=URL('default', 'help', args=session.current_id))),
-            (T('About') + " " + request.application, False, URL('default', 'about', args=session.current_id))
+            (T('About TrackDent'), False, URL('default', 'about', args=session.current_id))
         ])
         ]
 _()

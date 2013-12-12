@@ -9,9 +9,10 @@ To let me know if this software has helped you, or for any suggestions you may h
 -----------------------------------------
 
 -------------------------------
-Developed with web2py.
+Developed with [[web2py http://www.web2py.com]].
 
-http://127.0.0.1:8000/Trackdent/static/images/Stickers7.png
+http://127.0.0.1:8000/init/static/images/Stickers7.png
+
 
 ---------------------------------
 --------------------------------
@@ -31,5 +32,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+-----------------------------------------------------------------------------
+
+
+**Contributions:**
+
+---------------------------------------------------------------
+Icons: http://glyphicons.com/
+
+---------------------------------------------------------------
+---------------------------------------------------------------
+Datatables : http://datatables.net
+---------------------------------------------------------------
+---------------------------------------------------------------
+Full Calendar (jQuery plugin) by Adam Shaw: http://arshaw.com/fullcalendar/
 
 
